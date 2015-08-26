@@ -16,6 +16,7 @@ package main
 
 import (
 	"../common"
+	"fmt"
 	"runtime"
 )
 
@@ -33,6 +34,7 @@ func main() {
 
 	var (
 		context *common.Context
+		sprites *common.Sprites
 		err     error
 	)
 	if context, err = common.NewContext(); err != nil {
@@ -41,6 +43,10 @@ func main() {
 	if err = context.CreateWindow(WinWidth, WinHeight, WinTitle); err != nil {
 		panic(err)
 	}
+	if sprites, err = common.NewSprites("src/resources/spritesheet.json", 32); err != nil {
+		panic(err)
+	}
+	fmt.Printf("Sheet: %v\n", sprites.Sheet)
 	for !context.ShouldClose() {
 		context.Events.Poll()
 		context.SwapBuffers()
