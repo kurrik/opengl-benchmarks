@@ -45,6 +45,10 @@ func (p *Program) Unbind() {
 	gl.BindVertexArray(0)
 }
 
+func (p *Program) Id() uint32 {
+	return p.program
+}
+
 func (p *Program) Load(vertex, fragment string) (err error) {
 	if err = p.createVAO(); err != nil {
 		return

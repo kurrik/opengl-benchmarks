@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 type Context struct {
@@ -48,6 +49,14 @@ func NewContext() (context *Context, err error) {
 		fullscreen: false,
 	}
 	return
+}
+
+func (c *Context) Camera(worldCenter, worldSize mgl32.Vec3) (*Camera, error) {
+	return NewCamera(
+		worldCenter,
+		worldSize,
+		mgl32.Vec2{float32(c.w), float32(c.h)},
+	)
 }
 
 func (c *Context) SetResizable(val bool) {

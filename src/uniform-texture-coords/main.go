@@ -18,6 +18,7 @@ import (
 	"../common"
 	"fmt"
 	"runtime"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 func init() {
@@ -33,9 +34,11 @@ func main() {
 	)
 
 	var (
-		context *common.Context
-		sprites *common.Sprites
-		err     error
+		context   *common.Context
+		sprites   *common.Sprites
+		camera    *common.Camera
+		framerate *common.RendererFramerate
+		err       error
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -46,9 +49,18 @@ func main() {
 	if sprites, err = common.NewSprites("src/resources/spritesheet.json", 32); err != nil {
 		panic(err)
 	}
+	if framerate, err = common.NewRendererFramerate(); err != nil {
+		panic(err)
+	}
+	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6, 4, 2}); err != nil {
+		panic(err)
+	}
 	fmt.Printf("Sheet: %v\n", sprites.Sheet)
 	for !context.ShouldClose() {
 		context.Events.Poll()
+		framerate.Bind()
+		framerate.Render(camera)
+		framerate.Unbind()
 		context.SwapBuffers()
 	}
 }
