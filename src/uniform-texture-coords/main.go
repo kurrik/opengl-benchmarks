@@ -17,8 +17,10 @@ package main
 import (
 	"../common"
 	"fmt"
-	"runtime"
 	"github.com/go-gl/mathgl/mgl32"
+	"image/color"
+	"image/draw"
+	"runtime"
 )
 
 func init() {
@@ -38,6 +40,10 @@ func main() {
 		sprites   *common.Sprites
 		camera    *common.Camera
 		framerate *common.RendererFramerate
+		font      *common.FontFace
+		fg        = color.RGBA{255, 255, 255, 255}
+		bg        = color.RGBA{0, 0, 0, 255}
+		img       draw.Image
 		err       error
 	)
 	if context, err = common.NewContext(); err != nil {
@@ -53,6 +59,15 @@ func main() {
 		panic(err)
 	}
 	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6, 4, 2}); err != nil {
+		panic(err)
+	}
+	if font, err = common.NewFontFace("src/resources/Roboto-Light.ttf", 30, fg, bg); err != nil {
+		panic(err)
+	}
+	if img, err = font.GetImage("foo bar baz Baj george"); err != nil {
+		panic(err)
+	}
+	if err = common.WritePNG("test-font.png", img); err != nil {
 		panic(err)
 	}
 	fmt.Printf("Sheet: %v\n", sprites.Sheet)

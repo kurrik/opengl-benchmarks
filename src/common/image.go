@@ -15,6 +15,7 @@
 package common
 
 import (
+	"bufio"
 	"bytes"
 	"image"
 	"image/draw"
@@ -22,13 +23,30 @@ import (
 	"os"
 )
 
-func loadPNG(path string) (img image.Image, err error) {
+func LoadPNG(path string) (img image.Image, err error) {
 	var file *os.File
 	if file, err = os.Open(path); err != nil {
 		return
 	}
 	defer file.Close()
 	img, err = png.Decode(file)
+	return
+}
+
+func WritePNG(path string, img image.Image) (err error) {
+	var (
+		f *os.File
+		b *bufio.Writer
+	)
+	if f, err = os.Create(path); err != nil {
+		return
+	}
+	defer f.Close()
+	b = bufio.NewWriter(f)
+	if err = png.Encode(b, img); err != nil {
+		return
+	}
+	err = b.Flush()
 	return
 }
 

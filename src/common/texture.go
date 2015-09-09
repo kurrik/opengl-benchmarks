@@ -36,7 +36,7 @@ type Texture struct {
 
 func LoadTexture(path string, smoothing TextureSmoothing) (texture *Texture, err error) {
 	var img image.Image
-	if img, err = loadPNG(path); err != nil {
+	if img, err = LoadPNG(path); err != nil {
 		return
 	}
 	return GetTexture(img, smoothing)
