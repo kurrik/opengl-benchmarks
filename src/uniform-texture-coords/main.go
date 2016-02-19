@@ -44,6 +44,7 @@ func main() {
 		fg        = color.RGBA{255, 255, 255, 255}
 		bg        = color.RGBA{0, 0, 0, 255}
 		img       draw.Image
+		packed    *common.ImagePacked
 		err       error
 	)
 	if context, err = common.NewContext(); err != nil {
@@ -67,6 +68,29 @@ func main() {
 	if img, err = font.GetImage("foo bar baz Baj george"); err != nil {
 		panic(err)
 	}
+
+	packed = common.NewImagePacked(512, 512)
+	packed.Pack(img)
+	for _, s := range []string{
+		"another string to add",
+		"More string!",
+		"Packing more string",
+		"Add",
+		"More",
+		"String",
+		"Framerate 59",
+		"Framerate 60",
+		"Framerate 20",
+	} {
+		if img, err = font.GetImage(s); err != nil {
+			panic(err)
+		}
+		packed.Pack(img)
+	}
+	if err = common.WritePNG("test-packed.png", packed.Image()); err != nil {
+		panic(err)
+	}
+
 	if err = common.WritePNG("test-font.png", img); err != nil {
 		panic(err)
 	}
