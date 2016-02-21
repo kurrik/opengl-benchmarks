@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/binpacking"
+	"github.com/kurrik/opengl-benchmarks/common/renderers"
 	"image/color"
 	"image/draw"
 	"runtime"
@@ -39,12 +41,12 @@ func main() {
 		context   *common.Context
 		sprites   *common.Sprites
 		camera    *common.Camera
-		framerate *common.RendererFramerate
+		framerate *renderers.Framerate
 		font      *common.FontFace
 		fg        = color.RGBA{255, 255, 255, 255}
 		bg        = color.RGBA{0, 0, 0, 255}
 		img       draw.Image
-		packed    *common.ImagePacked
+		packed    *binpacking.PackedImage
 		err       error
 	)
 	if context, err = common.NewContext(); err != nil {
@@ -56,7 +58,7 @@ func main() {
 	if sprites, err = common.NewSprites("src/resources/spritesheet.json", 32); err != nil {
 		panic(err)
 	}
-	if framerate, err = common.NewRendererFramerate(); err != nil {
+	if framerate, err = renderers.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}
 	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6, 4, 2}); err != nil {
@@ -69,7 +71,7 @@ func main() {
 		panic(err)
 	}
 
-	packed = common.NewImagePacked(512, 512)
+	packed = binpacking.NewPackedImage(1024, 512)
 	packed.Pack(img)
 	for _, s := range []string{
 		"another string to add",

@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package renderers
 
 import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/kurrik/opengl-benchmarks/common"
 	"time"
 	"unsafe"
 )
@@ -42,8 +43,8 @@ type framerateDataPoint struct {
 	pos mgl32.Vec2
 }
 
-type RendererFramerate struct {
-	shader        *Program
+type Framerate struct {
+	shader        *common.Program
 	vbo           uint32
 	vboBytes      int
 	stride        int32
@@ -53,9 +54,9 @@ type RendererFramerate struct {
 	data          *framerateData
 }
 
-func NewRendererFramerate() (r *RendererFramerate, err error) {
-	r = &RendererFramerate{
-		shader: NewProgram(),
+func NewFramerateRenderer() (r *Framerate, err error) {
+	r = &Framerate{
+		shader: common.NewProgram(),
 		data:   newFramerateData(120),
 	}
 	if err = r.shader.Load(FRAMERATE_VERTEX, FRAMERATE_FRAGMENT); err != nil {
@@ -78,20 +79,20 @@ func NewRendererFramerate() (r *RendererFramerate, err error) {
 	return
 }
 
-func (r *RendererFramerate) Bind() {
+func (r *Framerate) Bind() {
 	r.shader.Bind()
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.vbo)
 }
 
-func (r *RendererFramerate) Unbind() {
+func (r *Framerate) Unbind() {
 	r.shader.Unbind()
 }
 
-func (r *RendererFramerate) Delete() {
+func (r *Framerate) Delete() {
 	r.shader.Delete()
 }
 
-func (r *RendererFramerate) Render(camera *Camera) (err error) {
+func (r *Framerate) Render(camera *common.Camera) (err error) {
 	r.data.Sample()
 	var (
 		modelView     = mgl32.Ident4()

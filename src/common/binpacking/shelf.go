@@ -1,4 +1,4 @@
-// Copyright 2015 Arne Roomann-Kurrik
+// Copyright 2016 Arne Roomann-Kurrik
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package binpacking
 
-import (
-	"image"
-	"image/draw"
-)
+import ()
 
 type shelf struct {
 	x      int
@@ -80,55 +77,4 @@ func (s *shelf) BestAreaFit(w, h, maxW int) int {
 		wordArea  = w * h
 	)
 	return shelfArea - wordArea
-}
-
-type ImagePacked struct {
-	img     draw.Image
-	shelves []*shelf
-}
-
-func NewImagePacked(w, h int) (i *ImagePacked) {
-	return &ImagePacked{
-		img:     image.NewRGBA(image.Rect(0, 0, w, h)),
-		shelves: []*shelf{newShelf()},
-	}
-}
-
-func (i *ImagePacked) Image() image.Image {
-	return i.img
-}
-
-func (i *ImagePacked) Pack(img image.Image) {
-	var (
-		j         int
-		s         *shelf
-		score     int
-		bestScore int             = -1
-		bestShelf int             = -1
-		imgBounds image.Rectangle = img.Bounds()
-		texBounds image.Rectangle = i.img.Bounds()
-		w         int             = imgBounds.Max.X
-		h         int             = imgBounds.Max.Y
-		maxW      int             = texBounds.Max.X
-	)
-	for j, s = range i.shelves {
-		if s.CanAdd(w, h, maxW) {
-			score = s.BestAreaFit(w, h, maxW)
-			if score > bestScore {
-				bestScore = score
-				bestShelf = j
-			}
-		}
-	}
-	if bestShelf == -1 {
-		i.shelves = append(i.shelves, i.shelves[len(i.shelves)-1].Close())
-		bestShelf = len(i.shelves) - 1
-	}
-	s = i.shelves[bestShelf]
-	var (
-		x, y     = s.Add(w, h)
-		destPt   = image.Pt(x, y)
-		destRect = image.Rectangle{destPt, destPt.Add(imgBounds.Max)}
-	)
-	draw.Draw(i.img, destRect, img, imgBounds.Min, draw.Src)
 }
