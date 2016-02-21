@@ -42,6 +42,7 @@ func main() {
 		sprites   *common.Sprites
 		camera    *common.Camera
 		framerate *renderers.Framerate
+		text      *renderers.Text
 		font      *common.FontFace
 		fg        = color.RGBA{255, 255, 255, 255}
 		bg        = color.RGBA{0, 0, 0, 255}
@@ -59,6 +60,9 @@ func main() {
 		panic(err)
 	}
 	if framerate, err = renderers.NewFramerateRenderer(); err != nil {
+		panic(err)
+	}
+	if text, err = renderers.NewTextRenderer(); err != nil {
 		panic(err)
 	}
 	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6, 4, 2}); err != nil {
@@ -102,6 +106,9 @@ func main() {
 		framerate.Bind()
 		framerate.Render(camera)
 		framerate.Unbind()
+		text.Bind()
+		text.Render(camera)
+		text.Unbind()
 		context.SwapBuffers()
 	}
 }
