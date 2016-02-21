@@ -15,9 +15,9 @@
 package main
 
 import (
-	"../common"
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/kurrik/opengl-benchmarks/common"
 	"image/color"
 	"image/draw"
 	"runtime"

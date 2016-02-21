@@ -26,3 +26,4 @@ _testmain.go
 # Project-specific
 gocode
 test-*.png
+.DS_Store

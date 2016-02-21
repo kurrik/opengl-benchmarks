@@ -15,7 +15,6 @@
 package common
 
 import (
-	"fmt"
 	"image"
 	"image/draw"
 )
