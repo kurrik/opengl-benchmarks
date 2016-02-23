@@ -181,7 +181,6 @@ func (r *Text) Render(camera *common.Camera) (err error) {
 	}
 	gl.BindBufferRange(gl.UNIFORM_BUFFER, r.uboBinding, r.ubo, 0, uboBytes)
 
-	//gl.DrawArrays(gl.POINTS, 0, int32(len(r.data.Points)))
 	ptsPerInstance := 6
 	instanceCount := 2
 	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(instanceCount))
