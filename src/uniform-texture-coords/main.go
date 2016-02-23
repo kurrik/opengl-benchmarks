@@ -38,17 +38,18 @@ func main() {
 	)
 
 	var (
-		context   *common.Context
-		sprites   *common.Sprites
-		camera    *common.Camera
-		framerate *renderers.Framerate
-		text      *renderers.Text
-		font      *common.FontFace
-		fg        = color.RGBA{255, 255, 255, 255}
-		bg        = color.RGBA{0, 0, 0, 255}
-		img       draw.Image
-		packed    *binpacking.PackedImage
-		err       error
+		context       *common.Context
+		sprites       *common.Sprites
+		camera        *common.Camera
+		framerate     *renderers.Framerate
+		text          *renderers.Text
+		font          *common.FontFace
+		fg            = color.RGBA{255, 255, 255, 255}
+		bg            = color.RGBA{0, 0, 0, 255}
+		img           draw.Image
+		packed        *binpacking.PackedImage
+		packedTexture *common.Texture
+		err           error
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -76,7 +77,6 @@ func main() {
 	}
 
 	packed = binpacking.NewPackedImage(1024, 512)
-	packed.Pack(img)
 	for _, s := range []string{
 		"another string to add",
 		"More string!",
@@ -91,13 +91,15 @@ func main() {
 		if img, err = font.GetImage(s); err != nil {
 			panic(err)
 		}
-		packed.Pack(img)
+		packed.Pack(s, img)
 	}
 	if err = common.WritePNG("test-packed.png", packed.Image()); err != nil {
 		panic(err)
 	}
-
 	if err = common.WritePNG("test-font.png", img); err != nil {
+		panic(err)
+	}
+	if packedTexture, err = common.GetTexture(packed.Image(), common.SmoothingLinear); err != nil {
 		panic(err)
 	}
 	fmt.Printf("Sheet: %v\n", sprites.Sheet)
@@ -106,9 +108,11 @@ func main() {
 		framerate.Bind()
 		framerate.Render(camera)
 		framerate.Unbind()
+		packedTexture.Bind()
 		text.Bind()
 		text.Render(camera)
 		text.Unbind()
+		packedTexture.Unbind()
 		context.SwapBuffers()
 	}
 }

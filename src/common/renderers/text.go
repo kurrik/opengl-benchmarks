@@ -24,27 +24,54 @@ import (
 
 const TEXT_FRAGMENT = `#version 150
 precision mediump float;
-in vec2 v_TexturePositionOut;
-uniform vec4 v_Color;
+in vec2 v_TexturePosition;
+uniform sampler2D u_Texture;
 out vec4 v_FragData;
 void main() {
-  v_FragData = v_Color;
+  v_FragData = texture(u_Texture, v_TexturePosition);
 }` + "\x00"
 
 const TEXT_VERTEX = `#version 150
+
+#define MAX_TILES 1024
+
+layout (std140) uniform TextureData {
+  vec4 Tiles[MAX_TILES];
+};
+
+const vec2 WorldPoints[] = vec2[6](
+  vec2(-0.5, -0.5),
+  vec2( 0.5,  0.5),
+  vec2(-0.5,  0.5),
+  vec2(-0.5, -0.5),
+  vec2( 0.5, -0.5),
+  vec2( 0.5,  0.5)
+);
+
+const vec2 TexturePoints[] = vec2[6](
+  vec2(0.0, 0.0),
+  vec2(1.0, 1.0),
+  vec2(0.0, 1.0),
+  vec2(0.0, 0.0),
+  vec2(1.0, 0.0),
+  vec2(1.0, 1.0)
+);
+
+in float f_Tile;
 in vec2 v_WorldPosition;
-in vec2 v_TexturePosition;
 uniform mat4 m_ModelView;
 uniform mat4 m_Projection;
-out vec2 v_TexturePositionOut;
+out vec2 v_TexturePosition;
 void main() {
-  gl_Position = m_Projection * m_ModelView * vec4(v_WorldPosition, 0.0, 1.0);
-  v_TexturePositionOut = v_TexturePosition;
+  vec4 Tile = Tiles[int(f_Tile)];
+  v_TexturePosition = TexturePoints[gl_VertexID] * Tile.xy + Tile.zw;
+  vec2 WorldPosition = WorldPoints[gl_VertexID] + v_WorldPosition;
+  gl_Position = m_Projection * m_ModelView * vec4(WorldPosition, 0.0, 1.0);
 }` + "\x00"
 
 type textDataPoint struct {
-	worldPos   mgl32.Vec2
-	texturePos mgl32.Vec2
+	worldPos mgl32.Vec2
+	tile     float32
 }
 
 type textData struct {
@@ -55,6 +82,9 @@ type Text struct {
 	shader        *common.Program
 	vbo           uint32
 	vboBytes      int
+	ubo           uint32
+	uboBytes      int
+	uboBinding    uint32
 	stride        int32
 	locColor      int32
 	locModelView  int32
@@ -72,27 +102,35 @@ func NewTextRenderer() (r *Text, err error) {
 	r.shader.Bind()
 	gl.GenBuffers(1, &r.vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.vbo)
+	gl.GenBuffers(1, &r.ubo)
+	gl.BindBuffer(gl.UNIFORM_BUFFER, r.ubo)
 	var (
-		point              textDataPoint
-		locWorldPosition   = uint32(gl.GetAttribLocation(r.shader.Id(), gl.Str("v_WorldPosition\x00")))
-		offWorldPosition   = gl.PtrOffset(int(unsafe.Offsetof(point.worldPos)))
-		locTexturePosition = uint32(gl.GetAttribLocation(r.shader.Id(), gl.Str("v_TexturePosition\x00")))
-		offTexturePosition = gl.PtrOffset(int(unsafe.Offsetof(point.texturePos)))
+		point            textDataPoint
+		locWorldPosition = uint32(gl.GetAttribLocation(r.shader.Id(), gl.Str("v_WorldPosition\x00")))
+		offWorldPosition = gl.PtrOffset(int(unsafe.Offsetof(point.worldPos)))
+		locTile          = uint32(gl.GetAttribLocation(r.shader.Id(), gl.Str("f_Tile\x00")))
+		offTile          = gl.PtrOffset(int(unsafe.Offsetof(point.tile)))
+		uboIndex         = uint32(gl.GetUniformBlockIndex(r.shader.Id(), gl.Str("TextureData\x00")))
 	)
+	r.uboBinding = 1
+	gl.UniformBlockBinding(r.shader.Id(), uboIndex, r.uboBinding)
 	r.stride = int32(unsafe.Sizeof(point))
 	r.locColor = gl.GetUniformLocation(r.shader.Id(), gl.Str("v_Color\x00"))
 	r.locModelView = gl.GetUniformLocation(r.shader.Id(), gl.Str("m_ModelView\x00"))
 	r.locProjection = gl.GetUniformLocation(r.shader.Id(), gl.Str("m_Projection\x00"))
 	gl.EnableVertexAttribArray(locWorldPosition)
-	gl.EnableVertexAttribArray(locTexturePosition)
+	gl.EnableVertexAttribArray(locTile)
 	gl.VertexAttribPointer(locWorldPosition, 2, gl.FLOAT, false, r.stride, offWorldPosition)
-	gl.VertexAttribPointer(locTexturePosition, 2, gl.FLOAT, false, r.stride, offTexturePosition)
+	gl.VertexAttribDivisor(locWorldPosition, 1)
+	gl.VertexAttribPointer(locTile, 1, gl.FLOAT, false, r.stride, offTile)
+	gl.VertexAttribDivisor(locTile, 1)
 	return
 }
 
 func (r *Text) Bind() {
 	r.shader.Bind()
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.vbo)
+	gl.BindBuffer(gl.UNIFORM_BUFFER, r.ubo)
 }
 
 func (r *Text) Unbind() {
@@ -101,6 +139,7 @@ func (r *Text) Unbind() {
 
 func (r *Text) Delete() {
 	r.shader.Delete()
+	// TODO: Delete UBO and VBO
 }
 
 func (r *Text) Render(camera *common.Camera) (err error) {
@@ -109,23 +148,11 @@ func (r *Text) Render(camera *common.Camera) (err error) {
 		Points: []textDataPoint{
 			textDataPoint{
 				worldPos: mgl32.Vec2{0, 0},
-				texturePos:  mgl32.Vec2{0, 0},
-			},
-			textDataPoint{
-				worldPos: mgl32.Vec2{0.25, 0.25},
-				texturePos:  mgl32.Vec2{0.25, 0.25},
-			},
-			textDataPoint{
-				worldPos: mgl32.Vec2{0.5, 0.5},
-				texturePos:  mgl32.Vec2{0.5, 0.5},
-			},
-			textDataPoint{
-				worldPos: mgl32.Vec2{0.75, 0.75},
-				texturePos:  mgl32.Vec2{0.75, 0.75},
+				tile:     0,
 			},
 			textDataPoint{
 				worldPos: mgl32.Vec2{1, 1},
-				texturePos:  mgl32.Vec2{1, 1},
+				tile:     0,
 			},
 		},
 	}
@@ -144,7 +171,20 @@ func (r *Text) Render(camera *common.Camera) (err error) {
 		gl.BufferSubData(gl.ARRAY_BUFFER, 0, dataBytes, gl.Ptr(r.data.Points))
 	}
 
-	gl.DrawArrays(gl.POINTS, 0, int32(len(r.data.Points)))
+	textureData := []float32{1, 1, 0, 0}
+	uboBytes := int(unsafe.Sizeof(textureData))
+	if uboBytes > r.uboBytes {
+		r.uboBytes = uboBytes
+		gl.BufferData(gl.UNIFORM_BUFFER, uboBytes, gl.Ptr(textureData), gl.STREAM_DRAW)
+	} else {
+		gl.BufferSubData(gl.UNIFORM_BUFFER, 0, uboBytes, gl.Ptr(textureData))
+	}
+	gl.BindBufferRange(gl.UNIFORM_BUFFER, r.uboBinding, r.ubo, 0, uboBytes)
+
+	//gl.DrawArrays(gl.POINTS, 0, int32(len(r.data.Points)))
+	ptsPerInstance := 6
+	instanceCount := 2
+	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(instanceCount))
 	if e := gl.GetError(); e != 0 {
 		err = fmt.Errorf("ERROR: OpenGL error %X", e)
 	}
