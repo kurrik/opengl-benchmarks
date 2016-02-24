@@ -91,13 +91,13 @@ func NewArrayBuffer() (b *ArrayBuffer) {
 	return
 }
 
-func (b *ArrayBuffer) VertexAttrib(programID uint32, name string, size int32, xtype uint32, stride int32, offset uintptr, divisor uint32) {
+func (b *ArrayBuffer) VertexAttrib(programID uint32, name string, size int32, xtype uint32, stride uintptr, offset uintptr, divisor uint32) {
 	var (
 		nameStr   = gl.Str(fmt.Sprintf("%v\x00", name))
 		location  = uint32(gl.GetAttribLocation(programID, nameStr))
 		offsetPtr = gl.PtrOffset(int(offset))
 	)
 	gl.EnableVertexAttribArray(location)
-	gl.VertexAttribPointer(location, size, xtype, false, stride, offsetPtr)
+	gl.VertexAttribPointer(location, size, xtype, false, int32(stride), offsetPtr)
 	gl.VertexAttribDivisor(location, divisor)
 }

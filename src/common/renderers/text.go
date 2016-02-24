@@ -80,7 +80,7 @@ type textData struct {
 
 type Text struct {
 	shader        *common.Program
-	stride        int32
+	stride        uintptr
 	locColor      int32
 	locModelView  int32
 	locProjection int32
@@ -98,7 +98,7 @@ func NewTextRenderer() (r *Text, err error) {
 	}
 	r.shader.Bind()
 	var point textDataPoint
-	r.stride = int32(unsafe.Sizeof(point))
+	r.stride = unsafe.Sizeof(point)
 	r.vbo = common.NewArrayBuffer()
 	r.vbo.VertexAttrib(r.shader.ID(), "v_WorldPosition", 2, gl.FLOAT, r.stride, unsafe.Offsetof(point.worldPos), 1)
 	r.vbo.VertexAttrib(r.shader.ID(), "f_Tile", 1, gl.FLOAT, r.stride, unsafe.Offsetof(point.tile), 1)
@@ -144,10 +144,10 @@ func (r *Text) Render(camera *common.Camera) (err error) {
 		},
 	}
 	var (
-		modelView       = mgl32.Ident4()
-		vboBytes    int = len(r.data.Points) * int(r.stride)
-		textureData     = []float32{1, 1, 0, 0}
-		uboBytes        = int(unsafe.Sizeof(textureData))
+		modelView   = mgl32.Ident4()
+		vboBytes    = len(r.data.Points) * int(r.stride)
+		textureData = []float32{1, 1, 0, 0}
+		uboBytes    = int(unsafe.Sizeof(textureData))
 	)
 	gl.Uniform4f(r.locColor, 0, 255.0/255.0, 0, 255.0/255.0)
 	gl.UniformMatrix4fv(r.locModelView, 1, false, &modelView[0])
