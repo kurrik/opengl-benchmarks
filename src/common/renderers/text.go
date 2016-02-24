@@ -147,7 +147,8 @@ func (r *Text) Render(camera *common.Camera) (err error) {
 		modelView   = mgl32.Ident4()
 		vboBytes    = len(r.data.Points) * int(r.stride)
 		textureData = []float32{1, 1, 0, 0}
-		uboBytes    = int(unsafe.Sizeof(textureData))
+		point       float32
+		uboBytes    = len(textureData) * int(unsafe.Sizeof(point))
 	)
 	gl.Uniform4f(r.locColor, 0, 255.0/255.0, 0, 255.0/255.0)
 	gl.UniformMatrix4fv(r.locModelView, 1, false, &modelView[0])
