@@ -110,7 +110,7 @@ func main() {
 		framerate.Unbind()
 		packedTexture.Bind()
 		text.Bind()
-		text.Render(camera)
+		text.Render(camera, packed.Data)
 		text.Unbind()
 		packedTexture.Unbind()
 		context.SwapBuffers()

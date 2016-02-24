@@ -129,13 +129,13 @@ func (r *Text) Delete() {
 	r.ubo.Delete()
 }
 
-func (r *Text) Render(camera *common.Camera) (err error) {
+func (r *Text) Render(camera *common.Camera, textureData []float32) (err error) {
 	// Temporary:
 	r.data = &textData{
 		Points: []textDataPoint{
 			textDataPoint{
 				worldPos: mgl32.Vec2{0, 0},
-				tile:     0,
+				tile:     2,
 			},
 			textDataPoint{
 				worldPos: mgl32.Vec2{1, 1},
@@ -144,14 +144,10 @@ func (r *Text) Render(camera *common.Camera) (err error) {
 		},
 	}
 	var (
-		modelView   = mgl32.Ident4()
-		vboBytes    = len(r.data.Points) * int(r.stride)
-		textureData = []float32{
-			1, 1, 0, 0,
-			0.5, 0.5, 0.0, 0.5,
-		}
-		point    float32
-		uboBytes = len(textureData) * int(unsafe.Sizeof(point))
+		modelView = mgl32.Ident4()
+		vboBytes  = len(r.data.Points) * int(r.stride)
+		point     float32
+		uboBytes  = len(textureData) * int(unsafe.Sizeof(point))
 	)
 	gl.Uniform4f(r.locColor, 0, 255.0/255.0, 0, 255.0/255.0)
 	gl.UniformMatrix4fv(r.locModelView, 1, false, &modelView[0])

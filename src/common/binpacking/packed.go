@@ -24,14 +24,16 @@ import (
 type PackedImage struct {
 	img       draw.Image
 	shelves   []*shelf
-	locations map[string]mgl32.Vec4
+	locations map[string]int
+	Data      []float32
 }
 
 func NewPackedImage(w, h int) (i *PackedImage) {
 	return &PackedImage{
 		img:       image.NewRGBA(image.Rect(0, 0, w, h)),
 		shelves:   []*shelf{newShelf()},
-		locations: map[string]mgl32.Vec4{},
+		locations: map[string]int{},
+		Data:      []float32{},
 	}
 }
 
@@ -71,16 +73,35 @@ func (i *PackedImage) Pack(key string, img image.Image) {
 		destPt   = image.Pt(x, y)
 		destRect = image.Rectangle{destPt, destPt.Add(imgBounds.Max)}
 	)
-	i.locations[key] = mgl32.Vec4{
-		float32(destRect.Min.X),
-		float32(destRect.Min.Y),
-		float32(destRect.Max.X),
-		float32(destRect.Max.Y),
-	}
+	i.locations[key] = len(i.Data) - 1
+	i.Data = append(i.Data,
+		float32(w) / float32(texBounds.Max.X),
+		float32(h) / float32(texBounds.Max.Y),
+		float32(x) / float32(texBounds.Max.X),
+		1.0 - float32(y + h) / float32(texBounds.Max.Y),
+	)
 	draw.Draw(i.img, destRect, img, imgBounds.Min, draw.Src)
 }
 
 func (i *PackedImage) Bounds(key string) (out mgl32.Vec4, err error) {
+	var (
+		index int
+		ok    bool
+	)
+	if index, ok = i.locations[key]; !ok {
+		err = fmt.Errorf("Packed image did not contain key %v", key)
+		return
+	}
+	out = mgl32.Vec4{
+		i.Data[index],
+		i.Data[index+1],
+		i.Data[index+2],
+		i.Data[index+3],
+	}
+	return
+}
+
+func (i *PackedImage) Index(key string) (out int, err error) {
 	var (
 		ok bool
 	)
