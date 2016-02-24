@@ -79,3 +79,25 @@ func (b *UniformBuffer) Upload(data interface{}, size int) {
 	b.GLBuffer.Upload(data, size)
 	gl.BindBufferRange(gl.UNIFORM_BUFFER, b.binding, b.GLBuffer.ID, 0, size)
 }
+
+type ArrayBuffer struct {
+	*GLBuffer
+}
+
+func NewArrayBuffer() (b *ArrayBuffer) {
+	b = &ArrayBuffer{
+		GLBuffer: NewGLBuffer(gl.ARRAY_BUFFER),
+	}
+	return
+}
+
+func (b *ArrayBuffer) VertexAttrib(programID uint32, name string, size int32, xtype uint32, stride int32, offset uintptr, divisor uint32) {
+	var (
+		nameStr   = gl.Str(fmt.Sprintf("%v\x00", name))
+		location  = uint32(gl.GetAttribLocation(programID, nameStr))
+		offsetPtr = gl.PtrOffset(int(offset))
+	)
+	gl.EnableVertexAttribArray(location)
+	gl.VertexAttribPointer(location, size, xtype, false, stride, offsetPtr)
+	gl.VertexAttribDivisor(location, divisor)
+}
