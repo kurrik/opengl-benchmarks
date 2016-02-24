@@ -67,13 +67,13 @@ func NewFramerateRenderer() (r *Framerate, err error) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.vbo)
 	var (
 		point       framerateDataPoint
-		locPosition = uint32(gl.GetAttribLocation(r.shader.Id(), gl.Str("v_Position\x00")))
+		locPosition = uint32(gl.GetAttribLocation(r.shader.ID(), gl.Str("v_Position\x00")))
 		offPosition = gl.PtrOffset(int(unsafe.Offsetof(point.pos)))
 	)
 	r.stride = int32(unsafe.Sizeof(point))
-	r.locColor = gl.GetUniformLocation(r.shader.Id(), gl.Str("v_Color\x00"))
-	r.locModelView = gl.GetUniformLocation(r.shader.Id(), gl.Str("m_ModelView\x00"))
-	r.locProjection = gl.GetUniformLocation(r.shader.Id(), gl.Str("m_Projection\x00"))
+	r.locColor = gl.GetUniformLocation(r.shader.ID(), gl.Str("v_Color\x00"))
+	r.locModelView = gl.GetUniformLocation(r.shader.ID(), gl.Str("m_ModelView\x00"))
+	r.locProjection = gl.GetUniformLocation(r.shader.ID(), gl.Str("m_Projection\x00"))
 	gl.EnableVertexAttribArray(locPosition)
 	gl.VertexAttribPointer(locPosition, 2, gl.FLOAT, false, r.stride, offPosition)
 	return

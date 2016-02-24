@@ -79,17 +79,18 @@ type textData struct {
 }
 
 type Text struct {
-	shader        *common.Program
-	vbo           uint32
-	vboBytes      int
-	ubo           uint32
-	uboBytes      int
-	uboBinding    uint32
+	shader   *common.Program
+	vbo      uint32
+	vboBytes int
+	//ubo           uint32
+	//uboBytes      int
+	//uboBinding    uint32
 	stride        int32
 	locColor      int32
 	locModelView  int32
 	locProjection int32
 	data          *textData
+	ubo           *common.UniformBuffer
 }
 
 func NewTextRenderer() (r *Text, err error) {
@@ -102,22 +103,20 @@ func NewTextRenderer() (r *Text, err error) {
 	r.shader.Bind()
 	gl.GenBuffers(1, &r.vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.vbo)
-	gl.GenBuffers(1, &r.ubo)
-	gl.BindBuffer(gl.UNIFORM_BUFFER, r.ubo)
 	var (
 		point            textDataPoint
-		locWorldPosition = uint32(gl.GetAttribLocation(r.shader.Id(), gl.Str("v_WorldPosition\x00")))
+		locWorldPosition = uint32(gl.GetAttribLocation(r.shader.ID(), gl.Str("v_WorldPosition\x00")))
 		offWorldPosition = gl.PtrOffset(int(unsafe.Offsetof(point.worldPos)))
-		locTile          = uint32(gl.GetAttribLocation(r.shader.Id(), gl.Str("f_Tile\x00")))
+		locTile          = uint32(gl.GetAttribLocation(r.shader.ID(), gl.Str("f_Tile\x00")))
 		offTile          = gl.PtrOffset(int(unsafe.Offsetof(point.tile)))
-		uboIndex         = uint32(gl.GetUniformBlockIndex(r.shader.Id(), gl.Str("TextureData\x00")))
 	)
-	r.uboBinding = 1
-	gl.UniformBlockBinding(r.shader.Id(), uboIndex, r.uboBinding)
+	r.ubo = common.NewUniformBuffer()
+	r.ubo.BlockBinding(r.shader.ID(), "TextureData", 1)
+
 	r.stride = int32(unsafe.Sizeof(point))
-	r.locColor = gl.GetUniformLocation(r.shader.Id(), gl.Str("v_Color\x00"))
-	r.locModelView = gl.GetUniformLocation(r.shader.Id(), gl.Str("m_ModelView\x00"))
-	r.locProjection = gl.GetUniformLocation(r.shader.Id(), gl.Str("m_Projection\x00"))
+	r.locColor = gl.GetUniformLocation(r.shader.ID(), gl.Str("v_Color\x00"))
+	r.locModelView = gl.GetUniformLocation(r.shader.ID(), gl.Str("m_ModelView\x00"))
+	r.locProjection = gl.GetUniformLocation(r.shader.ID(), gl.Str("m_Projection\x00"))
 	gl.EnableVertexAttribArray(locWorldPosition)
 	gl.EnableVertexAttribArray(locTile)
 	gl.VertexAttribPointer(locWorldPosition, 2, gl.FLOAT, false, r.stride, offWorldPosition)
@@ -130,7 +129,8 @@ func NewTextRenderer() (r *Text, err error) {
 func (r *Text) Bind() {
 	r.shader.Bind()
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.vbo)
-	gl.BindBuffer(gl.UNIFORM_BUFFER, r.ubo)
+	r.ubo.Bind()
+
 }
 
 func (r *Text) Unbind() {
@@ -139,7 +139,8 @@ func (r *Text) Unbind() {
 
 func (r *Text) Delete() {
 	r.shader.Delete()
-	// TODO: Delete UBO and VBO
+	// TODO: Delete VBO
+	r.ubo.Delete()
 }
 
 func (r *Text) Render(camera *common.Camera) (err error) {
@@ -163,24 +164,15 @@ func (r *Text) Render(camera *common.Camera) (err error) {
 	gl.Uniform4f(r.locColor, 0, 255.0/255.0, 0, 255.0/255.0)
 	gl.UniformMatrix4fv(r.locModelView, 1, false, &modelView[0])
 	gl.UniformMatrix4fv(r.locProjection, 1, false, &camera.Projection[0])
-
 	if dataBytes > r.vboBytes {
 		r.vboBytes = dataBytes
 		gl.BufferData(gl.ARRAY_BUFFER, dataBytes, gl.Ptr(r.data.Points), gl.STREAM_DRAW)
 	} else {
 		gl.BufferSubData(gl.ARRAY_BUFFER, 0, dataBytes, gl.Ptr(r.data.Points))
 	}
-
 	textureData := []float32{1, 1, 0, 0}
 	uboBytes := int(unsafe.Sizeof(textureData))
-	if uboBytes > r.uboBytes {
-		r.uboBytes = uboBytes
-		gl.BufferData(gl.UNIFORM_BUFFER, uboBytes, gl.Ptr(textureData), gl.STREAM_DRAW)
-	} else {
-		gl.BufferSubData(gl.UNIFORM_BUFFER, 0, uboBytes, gl.Ptr(textureData))
-	}
-	gl.BindBufferRange(gl.UNIFORM_BUFFER, r.uboBinding, r.ubo, 0, uboBytes)
-
+	r.ubo.Upload(textureData, uboBytes)
 	ptsPerInstance := 6
 	instanceCount := 2
 	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(instanceCount))

@@ -45,7 +45,7 @@ func (p *Program) Unbind() {
 	gl.BindVertexArray(0)
 }
 
-func (p *Program) Id() uint32 {
+func (p *Program) ID() uint32 {
 	return p.program
 }
 
