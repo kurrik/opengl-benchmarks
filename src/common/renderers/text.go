@@ -139,7 +139,7 @@ func (r *Text) Render(camera *common.Camera, textureData []float32) (err error) 
 			},
 			textDataPoint{
 				worldPos: mgl32.Vec2{1, 1},
-				tile:     1,
+				tile:     7,
 			},
 		},
 	}
