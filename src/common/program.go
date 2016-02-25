@@ -17,8 +17,17 @@ package common
 import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
 	"strings"
 )
+
+type Uniform struct {
+	location int32
+}
+
+func (u *Uniform) Mat4(m mgl32.Mat4) {
+	gl.UniformMatrix4fv(u.location, 1, false, &m[0])
+}
 
 type Program struct {
 	vao     uint32
@@ -57,6 +66,13 @@ func (p *Program) Load(vertex, fragment string) (err error) {
 		return
 	}
 	return
+}
+
+func (p *Program) Uniform(name string) *Uniform {
+	var nameStr = gl.Str(fmt.Sprintf("%v\x00", name))
+	return &Uniform{
+		location: gl.GetUniformLocation(p.ID(), nameStr),
+	}
 }
 
 func (p *Program) createVAO() error {

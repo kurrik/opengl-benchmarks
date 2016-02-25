@@ -79,14 +79,13 @@ type textData struct {
 }
 
 type Text struct {
-	shader        *common.Program
-	stride        uintptr
-	locColor      int32
-	locModelView  int32
-	locProjection int32
-	data          *textData
-	ubo           *common.UniformBuffer
-	vbo           *common.ArrayBuffer
+	shader *common.Program
+	stride uintptr
+	data   *textData
+	ubo    *common.UniformBuffer
+	vbo    *common.ArrayBuffer
+	uView  *common.Uniform
+	uProj  *common.Uniform
 }
 
 func NewTextRenderer() (r *Text, err error) {
@@ -106,9 +105,8 @@ func NewTextRenderer() (r *Text, err error) {
 	r.ubo = common.NewUniformBuffer()
 	r.ubo.BlockBinding(r.shader.ID(), "TextureData", 1)
 
-	r.locColor = gl.GetUniformLocation(r.shader.ID(), gl.Str("v_Color\x00"))
-	r.locModelView = gl.GetUniformLocation(r.shader.ID(), gl.Str("m_ModelView\x00"))
-	r.locProjection = gl.GetUniformLocation(r.shader.ID(), gl.Str("m_Projection\x00"))
+	r.uView = r.shader.Uniform("m_ModelView")
+	r.uProj = r.shader.Uniform("m_Projection")
 	return
 }
 
@@ -116,7 +114,6 @@ func (r *Text) Bind() {
 	r.shader.Bind()
 	r.vbo.Bind()
 	r.ubo.Bind()
-
 }
 
 func (r *Text) Unbind() {
@@ -149,9 +146,8 @@ func (r *Text) Render(camera *common.Camera, textureData []float32) (err error) 
 		point     float32
 		uboBytes  = len(textureData) * int(unsafe.Sizeof(point))
 	)
-	gl.Uniform4f(r.locColor, 0, 255.0/255.0, 0, 255.0/255.0)
-	gl.UniformMatrix4fv(r.locModelView, 1, false, &modelView[0])
-	gl.UniformMatrix4fv(r.locProjection, 1, false, &camera.Projection[0])
+	r.uView.Mat4(modelView)
+	r.uProj.Mat4(camera.Projection)
 	r.vbo.Upload(r.data.Points, vboBytes)
 	r.ubo.Upload(textureData, uboBytes)
 	ptsPerInstance := 6
