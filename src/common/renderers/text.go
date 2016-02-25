@@ -99,16 +99,11 @@ func NewTextRenderer() (r *Text, err error) {
 	r.shader.Bind()
 	var point textDataPoint
 	r.stride = unsafe.Sizeof(point)
-	fmt.Printf("STRIDE %v\n", r.stride)
-	fmt.Printf("point.model offset %v\n", unsafe.Offsetof(point.model))
-	fmt.Printf("point.tile offset %v\n", unsafe.Offsetof(point.tile))
-
 	r.vbo = common.NewArrayBuffer(r.shader.ID(), r.stride)
 	r.vbo.Float("f_Tile", unsafe.Offsetof(point.tile), 1)
 	r.vbo.Mat4("m_Model", unsafe.Offsetof(point.model), 1)
 	r.ubo = common.NewUniformBuffer(r.shader.ID())
 	r.ubo.BlockBinding("TextureData", 1)
-
 	r.uView = r.shader.Uniform("m_View")
 	r.uProj = r.shader.Uniform("m_Projection")
 	return

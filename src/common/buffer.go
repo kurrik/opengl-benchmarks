@@ -99,7 +99,6 @@ func NewArrayBuffer(programID uint32, stride uintptr) (b *ArrayBuffer) {
 }
 
 func (b *ArrayBuffer) vertexAttrib(location uint32, size int32, xtype uint32, offset uintptr, divisor uint32) {
-	fmt.Printf("LOCATION %v\n", location)
 	var offsetPtr = gl.PtrOffset(int(offset))
 	gl.EnableVertexAttribArray(location)
 	gl.VertexAttribPointer(location, size, xtype, false, int32(b.stride), offsetPtr)
@@ -129,7 +128,6 @@ func (b *ArrayBuffer) Mat4(name string, offset uintptr, divisor uint32) {
 		nameStr  = gl.Str(fmt.Sprintf("%v\x00", name))
 		location = uint32(gl.GetAttribLocation(b.programID, nameStr))
 	)
-	fmt.Printf("LOCATION %v\n", location)
 	b.vertexAttrib(location, 4, gl.FLOAT, offset, divisor)
 	b.vertexAttrib(location+1, 4, gl.FLOAT, offset+sizeVec4, divisor)
 	b.vertexAttrib(location+2, 4, gl.FLOAT, offset+2*sizeVec4, divisor)
