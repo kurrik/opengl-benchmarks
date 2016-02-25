@@ -98,12 +98,12 @@ func NewTextRenderer() (r *Text, err error) {
 	r.shader.Bind()
 	var point textDataPoint
 	r.stride = unsafe.Sizeof(point)
-	r.vbo = common.NewArrayBuffer()
-	r.vbo.VertexAttrib(r.shader.ID(), "v_WorldPosition", 2, gl.FLOAT, r.stride, unsafe.Offsetof(point.worldPos), 1)
-	r.vbo.VertexAttrib(r.shader.ID(), "f_Tile", 1, gl.FLOAT, r.stride, unsafe.Offsetof(point.tile), 1)
+	r.vbo = common.NewArrayBuffer(r.shader.ID(), r.stride)
+	r.vbo.Vec2("v_WorldPosition", unsafe.Offsetof(point.worldPos), 1)
+	r.vbo.Float("f_Tile", unsafe.Offsetof(point.tile), 1)
 
-	r.ubo = common.NewUniformBuffer()
-	r.ubo.BlockBinding(r.shader.ID(), "TextureData", 1)
+	r.ubo = common.NewUniformBuffer(r.shader.ID())
+	r.ubo.BlockBinding("TextureData", 1)
 
 	r.uView = r.shader.Uniform("m_ModelView")
 	r.uProj = r.shader.Uniform("m_Projection")

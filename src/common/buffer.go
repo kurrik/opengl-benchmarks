@@ -56,23 +56,25 @@ func (b *GLBuffer) Upload(data interface{}, size int) {
 
 type UniformBuffer struct {
 	*GLBuffer
-	binding uint32
+	programID uint32
+	binding   uint32
 }
 
-func NewUniformBuffer() (b *UniformBuffer) {
+func NewUniformBuffer(programID uint32) (b *UniformBuffer) {
 	b = &UniformBuffer{
-		GLBuffer: NewGLBuffer(gl.UNIFORM_BUFFER),
+		programID: programID,
+		GLBuffer:  NewGLBuffer(gl.UNIFORM_BUFFER),
 	}
 	return
 }
 
-func (b *UniformBuffer) BlockBinding(programID uint32, name string, binding uint32) {
+func (b *UniformBuffer) BlockBinding(name string, binding uint32) {
 	b.binding = binding
 	var (
 		nameStr = gl.Str(fmt.Sprintf("%v\x00", name))
-		index   = uint32(gl.GetUniformBlockIndex(programID, nameStr))
+		index   = uint32(gl.GetUniformBlockIndex(b.programID, nameStr))
 	)
-	gl.UniformBlockBinding(programID, index, b.binding)
+	gl.UniformBlockBinding(b.programID, index, b.binding)
 }
 
 func (b *UniformBuffer) Upload(data interface{}, size int) {
@@ -82,22 +84,34 @@ func (b *UniformBuffer) Upload(data interface{}, size int) {
 
 type ArrayBuffer struct {
 	*GLBuffer
+	programID uint32
+	stride    uintptr
 }
 
-func NewArrayBuffer() (b *ArrayBuffer) {
+func NewArrayBuffer(programID uint32, stride uintptr) (b *ArrayBuffer) {
 	b = &ArrayBuffer{
-		GLBuffer: NewGLBuffer(gl.ARRAY_BUFFER),
+		GLBuffer:  NewGLBuffer(gl.ARRAY_BUFFER),
+		programID: programID,
+		stride:    stride,
 	}
 	return
 }
 
-func (b *ArrayBuffer) VertexAttrib(programID uint32, name string, size int32, xtype uint32, stride uintptr, offset uintptr, divisor uint32) {
+func (b *ArrayBuffer) VertexAttrib(name string, size int32, xtype uint32, offset uintptr, divisor uint32) {
 	var (
 		nameStr   = gl.Str(fmt.Sprintf("%v\x00", name))
-		location  = uint32(gl.GetAttribLocation(programID, nameStr))
+		location  = uint32(gl.GetAttribLocation(b.programID, nameStr))
 		offsetPtr = gl.PtrOffset(int(offset))
 	)
 	gl.EnableVertexAttribArray(location)
-	gl.VertexAttribPointer(location, size, xtype, false, int32(stride), offsetPtr)
+	gl.VertexAttribPointer(location, size, xtype, false, int32(b.stride), offsetPtr)
 	gl.VertexAttribDivisor(location, divisor)
+}
+
+func (b *ArrayBuffer) Float(name string, offset uintptr, divisor uint32) {
+	b.VertexAttrib(name, 1, gl.FLOAT, offset, divisor)
+}
+
+func (b *ArrayBuffer) Vec2(name string, offset uintptr, divisor uint32) {
+	b.VertexAttrib(name, 2, gl.FLOAT, offset, divisor)
 }
