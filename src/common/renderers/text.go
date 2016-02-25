@@ -58,20 +58,21 @@ const vec2 TexturePoints[] = vec2[6](
 );
 
 in float f_Tile;
-in vec2 v_WorldPosition;
-uniform mat4 m_ModelView;
+in mat4 m_Model;
+uniform mat4 m_View;
 uniform mat4 m_Projection;
 out vec2 v_TexturePosition;
 void main() {
   vec4 Tile = Tiles[int(f_Tile)];
+  mat4 m_ModelView = m_View * m_Model;
+  vec4 v_Point = vec4(WorldPoints[gl_VertexID], 0.0, 1.0);
+  gl_Position = m_Projection * m_ModelView * v_Point;
   v_TexturePosition = TexturePoints[gl_VertexID] * Tile.xy + Tile.zw;
-  vec2 WorldPosition = WorldPoints[gl_VertexID] + v_WorldPosition;
-  gl_Position = m_Projection * m_ModelView * vec4(WorldPosition, 0.0, 1.0);
 }` + "\x00"
 
 type textDataPoint struct {
-	worldPos mgl32.Vec2
-	tile     float32
+	model mgl32.Mat4
+	tile  float32
 }
 
 type textData struct {
@@ -98,14 +99,17 @@ func NewTextRenderer() (r *Text, err error) {
 	r.shader.Bind()
 	var point textDataPoint
 	r.stride = unsafe.Sizeof(point)
-	r.vbo = common.NewArrayBuffer(r.shader.ID(), r.stride)
-	r.vbo.Vec2("v_WorldPosition", unsafe.Offsetof(point.worldPos), 1)
-	r.vbo.Float("f_Tile", unsafe.Offsetof(point.tile), 1)
+	fmt.Printf("STRIDE %v\n", r.stride)
+	fmt.Printf("point.model offset %v\n", unsafe.Offsetof(point.model))
+	fmt.Printf("point.tile offset %v\n", unsafe.Offsetof(point.tile))
 
+	r.vbo = common.NewArrayBuffer(r.shader.ID(), r.stride)
+	r.vbo.Float("f_Tile", unsafe.Offsetof(point.tile), 1)
+	r.vbo.Mat4("m_Model", unsafe.Offsetof(point.model), 1)
 	r.ubo = common.NewUniformBuffer(r.shader.ID())
 	r.ubo.BlockBinding("TextureData", 1)
 
-	r.uView = r.shader.Uniform("m_ModelView")
+	r.uView = r.shader.Uniform("m_View")
 	r.uProj = r.shader.Uniform("m_Projection")
 	return
 }
@@ -131,22 +135,21 @@ func (r *Text) Render(camera *common.Camera, textureData []float32) (err error) 
 	r.data = &textData{
 		Points: []textDataPoint{
 			textDataPoint{
-				worldPos: mgl32.Vec2{0, 0},
-				tile:     2,
+				model: mgl32.HomogRotate3DZ(mgl32.DegToRad(5.0)),
+				tile:  2,
 			},
 			textDataPoint{
-				worldPos: mgl32.Vec2{1, 1},
-				tile:     7,
+				model: mgl32.Translate3D(1, 1, 0).Mul4(mgl32.HomogRotate3DZ(mgl32.DegToRad(15.0))),
+				tile:  7,
 			},
 		},
 	}
 	var (
-		modelView = mgl32.Ident4()
-		vboBytes  = len(r.data.Points) * int(r.stride)
-		point     float32
-		uboBytes  = len(textureData) * int(unsafe.Sizeof(point))
+		vboBytes = len(r.data.Points) * int(r.stride)
+		point    float32
+		uboBytes = len(textureData) * int(unsafe.Sizeof(point))
 	)
-	r.uView.Mat4(modelView)
+	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
 	r.vbo.Upload(r.data.Points, vboBytes)
 	r.ubo.Upload(textureData, uboBytes)

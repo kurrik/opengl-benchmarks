@@ -24,11 +24,14 @@ type Camera struct {
 	WorldSize   mgl32.Vec3
 	ScreenSize  mgl32.Vec2
 	Projection  mgl32.Mat4
+	View        mgl32.Mat4
 	Inverse     mgl32.Mat4
 }
 
 func NewCamera(worldCenter, worldSize mgl32.Vec3, screenSize mgl32.Vec2) (c *Camera, err error) {
-	c = &Camera{}
+	c = &Camera{
+		View: mgl32.Ident4(),
+	}
 	c.SetScreenSize(screenSize)
 	err = c.SetWorldBounds(worldCenter, worldSize)
 	return

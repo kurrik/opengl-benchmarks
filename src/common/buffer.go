@@ -17,6 +17,7 @@ package common
 import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"unsafe"
 )
 
 type Buffer interface {
@@ -97,15 +98,20 @@ func NewArrayBuffer(programID uint32, stride uintptr) (b *ArrayBuffer) {
 	return
 }
 
-func (b *ArrayBuffer) VertexAttrib(name string, size int32, xtype uint32, offset uintptr, divisor uint32) {
-	var (
-		nameStr   = gl.Str(fmt.Sprintf("%v\x00", name))
-		location  = uint32(gl.GetAttribLocation(b.programID, nameStr))
-		offsetPtr = gl.PtrOffset(int(offset))
-	)
+func (b *ArrayBuffer) vertexAttrib(location uint32, size int32, xtype uint32, offset uintptr, divisor uint32) {
+	fmt.Printf("LOCATION %v\n", location)
+	var offsetPtr = gl.PtrOffset(int(offset))
 	gl.EnableVertexAttribArray(location)
 	gl.VertexAttribPointer(location, size, xtype, false, int32(b.stride), offsetPtr)
 	gl.VertexAttribDivisor(location, divisor)
+}
+
+func (b *ArrayBuffer) VertexAttrib(name string, size int32, xtype uint32, offset uintptr, divisor uint32) {
+	var (
+		nameStr  = gl.Str(fmt.Sprintf("%v\x00", name))
+		location = uint32(gl.GetAttribLocation(b.programID, nameStr))
+	)
+	b.vertexAttrib(location, size, xtype, offset, divisor)
 }
 
 func (b *ArrayBuffer) Float(name string, offset uintptr, divisor uint32) {
@@ -114,4 +120,18 @@ func (b *ArrayBuffer) Float(name string, offset uintptr, divisor uint32) {
 
 func (b *ArrayBuffer) Vec2(name string, offset uintptr, divisor uint32) {
 	b.VertexAttrib(name, 2, gl.FLOAT, offset, divisor)
+}
+
+func (b *ArrayBuffer) Mat4(name string, offset uintptr, divisor uint32) {
+	var (
+		float    float32
+		sizeVec4 = unsafe.Sizeof(float) * 4
+		nameStr  = gl.Str(fmt.Sprintf("%v\x00", name))
+		location = uint32(gl.GetAttribLocation(b.programID, nameStr))
+	)
+	fmt.Printf("LOCATION %v\n", location)
+	b.vertexAttrib(location, 4, gl.FLOAT, offset, divisor)
+	b.vertexAttrib(location+1, 4, gl.FLOAT, offset+sizeVec4, divisor)
+	b.vertexAttrib(location+2, 4, gl.FLOAT, offset+2*sizeVec4, divisor)
+	b.vertexAttrib(location+3, 4, gl.FLOAT, offset+3*sizeVec4, divisor)
 }
