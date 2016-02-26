@@ -137,6 +137,10 @@ func (c *Context) ShouldClose() bool {
 	return c.window.ShouldClose()
 }
 
+func (c *Context) Clear() {
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+}
+
 func (c *Context) SwapBuffers() {
 	c.window.SwapBuffers()
 }

@@ -105,6 +105,7 @@ func main() {
 	fmt.Printf("Sheet: %v\n", sprites.Sheet)
 	for !context.ShouldClose() {
 		context.Events.Poll()
+		context.Clear()
 		framerate.Bind()
 		framerate.Render(camera)
 		framerate.Unbind()
