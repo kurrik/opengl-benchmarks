@@ -35,8 +35,13 @@ const TEXT_VERTEX = `#version 150
 
 #define MAX_TILES 1024
 
+struct Tile {
+  vec4 texture;
+  vec4 size;
+};
+
 layout (std140) uniform TextureData {
-  vec4 Tiles[MAX_TILES];
+  Tile Tiles[MAX_TILES];
 };
 
 const vec2 WorldPoints[] = vec2[6](
@@ -63,11 +68,11 @@ uniform mat4 m_View;
 uniform mat4 m_Projection;
 out vec2 v_TexturePosition;
 void main() {
-  vec4 Tile = Tiles[int(f_Tile)];
+  Tile t_Tile = Tiles[int(f_Tile)];
   mat4 m_ModelView = m_View * m_Model;
-  vec4 v_Point = vec4(WorldPoints[gl_VertexID], 0.0, 1.0);
+  vec4 v_Point = vec4(WorldPoints[gl_VertexID] * t_Tile.size.xy, 0.0, 1.0);
   gl_Position = m_Projection * m_ModelView * v_Point;
-  v_TexturePosition = TexturePoints[gl_VertexID] * Tile.xy + Tile.zw;
+  v_TexturePosition = TexturePoints[gl_VertexID] * t_Tile.texture.xy + t_Tile.texture.zw;
 }` + "\x00"
 
 type textDataPoint struct {
@@ -127,14 +132,21 @@ func (r *Text) Delete() {
 
 func (r *Text) Render(camera *common.Camera, textureData []float32) (err error) {
 	// Temporary:
+	var (
+		scale  = mgl32.Scale3D(1.0/128.0, 1.0/128.0, 1.0)
+		rot1   = mgl32.HomogRotate3DZ(mgl32.DegToRad(5.0))
+		trans2 = mgl32.Translate3D(1, 1, 0)
+		rot2   = mgl32.HomogRotate3DZ(mgl32.DegToRad(15.0))
+	)
+
 	r.data = &textData{
 		Points: []textDataPoint{
 			textDataPoint{
-				model: mgl32.HomogRotate3DZ(mgl32.DegToRad(5.0)),
+				model: rot1.Mul4(scale),
 				tile:  2,
 			},
 			textDataPoint{
-				model: mgl32.Translate3D(1, 1, 0).Mul4(mgl32.HomogRotate3DZ(mgl32.DegToRad(15.0))),
+				model: trans2.Mul4(rot2).Mul4(scale),
 				tile:  7,
 			},
 		},

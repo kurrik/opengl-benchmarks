@@ -79,6 +79,10 @@ func (i *PackedImage) Pack(key string, img image.Image) {
 		float32(h) / float32(texBounds.Max.Y),
 		float32(x) / float32(texBounds.Max.X),
 		1.0 - float32(y + h) / float32(texBounds.Max.Y),
+		float32(w),
+		float32(h),
+		0,
+		0,
 	)
 	draw.Draw(i.img, destRect, img, imgBounds.Min, draw.Src)
 }
