@@ -20,6 +20,7 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/binpacking"
 	"github.com/kurrik/opengl-benchmarks/common/renderers"
+	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"image/color"
 	"image/draw"
 	"runtime"
@@ -39,7 +40,7 @@ func main() {
 
 	var (
 		context       *common.Context
-		sprites       *common.Sprites
+		sprites       *spritesheet.Sprites
 		camera        *common.Camera
 		framerate     *renderers.Framerate
 		text          *renderers.Text
@@ -57,7 +58,7 @@ func main() {
 	if err = context.CreateWindow(WinWidth, WinHeight, WinTitle); err != nil {
 		panic(err)
 	}
-	if sprites, err = common.NewSprites("src/resources/spritesheet.json", 32); err != nil {
+	if sprites, err = spritesheet.NewSprites("src/resources/spritesheet.json", 32); err != nil {
 		panic(err)
 	}
 	if framerate, err = renderers.NewFramerateRenderer(); err != nil {

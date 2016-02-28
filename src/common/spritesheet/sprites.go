@@ -12,23 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package spritesheet
 
 import (
+	"github.com/kurrik/opengl-benchmarks/common"
 	"io/ioutil"
 	"path"
 )
 
 type Sprites struct {
 	Sheet   *Spritesheet
-	Texture *Texture
+	Texture *common.Texture
 }
 
 func NewSprites(jsonPath string, pxPerUnit float32) (sprites *Sprites, err error) {
 	var (
 		data        []byte
 		dir         = path.Dir(jsonPath)
-		texture     *Texture
+		texture     *common.Texture
 		spritesheet *Spritesheet
 	)
 	if data, err = ioutil.ReadFile(jsonPath); err != nil {
@@ -40,9 +41,9 @@ func NewSprites(jsonPath string, pxPerUnit float32) (sprites *Sprites, err error
 	); err != nil {
 		return
 	}
-	if texture, err = LoadTexture(
+	if texture, err = common.LoadTexture(
 		path.Join(dir, spritesheet.GetTexturePath()),
-		SmoothingNearest,
+		common.SmoothingNearest,
 	); err != nil {
 		return
 	}
