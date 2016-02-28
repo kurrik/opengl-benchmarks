@@ -21,6 +21,7 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common/binpacking"
 	"github.com/kurrik/opengl-benchmarks/common/renderers"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
+	"github.com/kurrik/opengl-benchmarks/common/text"
 	"image/color"
 	"image/draw"
 	"runtime"
@@ -43,8 +44,8 @@ func main() {
 		sprites       *spritesheet.Sprites
 		camera        *common.Camera
 		framerate     *renderers.Framerate
-		text          *renderers.Text
-		font          *common.FontFace
+		textRenderer  *renderers.Text
+		font          *text.FontFace
 		fg            = color.RGBA{255, 255, 255, 255}
 		bg            = color.RGBA{0, 0, 0, 64}
 		img           draw.Image
@@ -64,13 +65,13 @@ func main() {
 	if framerate, err = renderers.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}
-	if text, err = renderers.NewTextRenderer(); err != nil {
+	if textRenderer, err = renderers.NewTextRenderer(); err != nil {
 		panic(err)
 	}
 	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6, 4, 2}); err != nil {
 		panic(err)
 	}
-	if font, err = common.NewFontFace("src/resources/Roboto-Light.ttf", 30, fg, bg); err != nil {
+	if font, err = text.NewFontFace("src/resources/Roboto-Light.ttf", 30, fg, bg); err != nil {
 		panic(err)
 	}
 	if img, err = font.GetImage("foo bar baz Baj george"); err != nil {
@@ -111,9 +112,9 @@ func main() {
 		framerate.Render(camera)
 		framerate.Unbind()
 		packedTexture.Bind()
-		text.Bind()
-		text.Render(camera, packed.Data)
-		text.Unbind()
+		textRenderer.Bind()
+		textRenderer.Render(camera, packed.Data)
+		textRenderer.Unbind()
 		packedTexture.Unbind()
 		context.SwapBuffers()
 	}

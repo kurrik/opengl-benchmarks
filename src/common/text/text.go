@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package text
 
 import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
+	"github.com/kurrik/opengl-benchmarks/common"
 	"golang.org/x/image/math/fixed"
 	"image"
 	"image/color"
@@ -27,7 +28,7 @@ import (
 
 type TextCache struct {
 	Text     string
-	Texture  *Texture
+	Texture  *common.Texture
 	fontface *FontFace
 }
 
@@ -41,7 +42,7 @@ func (tc *TextCache) SetText(text string) (err error) {
 	if text == tc.Text {
 		return
 	}
-	var tex *Texture = tc.Texture
+	var tex *common.Texture = tc.Texture
 	tc.Texture, err = tc.fontface.GetText(text)
 	if tex != nil {
 		tex.Delete()
@@ -134,13 +135,13 @@ func (ff *FontFace) GetImage(text string) (img draw.Image, err error) {
 	return
 }
 
-func (ff *FontFace) GetText(text string) (t *Texture, err error) {
+func (ff *FontFace) GetText(text string) (t *common.Texture, err error) {
 	var (
 		img image.Image
 	)
 	if img, err = ff.GetImage(text); err != nil {
 		return
 	}
-	t, err = GetTexture(img, gl.NEAREST)
+	t, err = common.GetTexture(img, gl.NEAREST)
 	return
 }
