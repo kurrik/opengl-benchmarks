@@ -47,7 +47,7 @@ func main() {
 		textRenderer  *renderers.Text
 		font          *text.FontFace
 		fg            = color.RGBA{255, 255, 255, 255}
-		bg            = color.RGBA{0, 0, 0, 64}
+		bg            = color.RGBA{64, 128, 64, 128}
 		img           draw.Image
 		packed        *binpacking.PackedImage
 		packedTexture *common.Texture

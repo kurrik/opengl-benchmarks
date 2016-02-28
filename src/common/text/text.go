@@ -15,133 +15,52 @@
 package text
 
 import (
-	"github.com/go-gl/gl/v3.3-core/gl"
-	"github.com/golang/freetype"
-	"github.com/golang/freetype/truetype"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"golang.org/x/image/math/fixed"
-	"image"
-	"image/color"
+	"github.com/kurrik/opengl-benchmarks/common/binpacking"
 	"image/draw"
-	"io/ioutil"
 )
 
-type TextCache struct {
-	Text     string
-	Texture  *common.Texture
-	fontface *FontFace
+type Text struct {
+	packedImage   *binpacking.PackedImage
+	packedTexture *common.Texture
 }
 
-func NewTextCache(fontface *FontFace) *TextCache {
-	return &TextCache{
-		fontface: fontface,
+func NewText() *Text {
+	return &Text{
+		packedImage: binpacking.NewPackedImage(512, 512),
 	}
 }
 
-func (tc *TextCache) SetText(text string) (err error) {
-	if text == tc.Text {
+func (t *Text) Set(key, text string, font *FontFace) (err error) {
+	var img draw.Image
+	if img, err = font.GetImage(text); err != nil {
 		return
 	}
-	var tex *common.Texture = tc.Texture
-	tc.Texture, err = tc.fontface.GetText(text)
-	if tex != nil {
-		tex.Delete()
-	}
-	if err == nil {
-		tc.Text = text
+	t.packedImage.Pack(key, img)
+	if t.packedTexture, err = common.GetTexture(
+		t.packedImage.Image(),
+		common.SmoothingLinear,
+	); err != nil {
+		return
 	}
 	return
 }
 
-func (tc *TextCache) Clear() {
-	tc.Delete()
-	tc.Text = ""
-}
-
-func (tc *TextCache) Delete() {
-	if tc.Texture != nil {
-		tc.Texture.Delete()
-		tc.Texture = nil
+func (t *Text) Bind() {
+	if t.packedTexture != nil {
+		t.packedTexture.Bind()
 	}
 }
 
-type FontFace struct {
-	font    *truetype.Font
-	charw   float32
-	charh   float32
-	offy    float32
-	fg      color.Color
-	bg      color.Color
-	context *freetype.Context
+func (t *Text) Unbind() {
+	if t.packedTexture != nil {
+		t.packedTexture.Unbind()
+	}
 }
 
-func NewFontFace(path string, pixels float32, fg, bg color.Color) (fontface *FontFace, err error) {
-	var (
-		font      *truetype.Font
-		fontbytes []byte
-		bounds    fixed.Rectangle26_6
-		context   *freetype.Context
-		points    float32
-		dpi       float32 = 96
-	)
-	if fontbytes, err = ioutil.ReadFile(path); err != nil {
-		return
+func (t *Text) Delete() {
+	if t.packedTexture != nil {
+		t.packedTexture.Delete()
+		t.packedTexture = nil
 	}
-	if font, err = freetype.ParseFont(fontbytes); err != nil {
-		return
-	}
-	points = pixels * 72 / dpi
-	bounds = font.Bounds(fixed.I(int(pixels)))
-	context = freetype.NewContext()
-	context.SetFont(font)
-	context.SetFontSize(float64(points))
-	context.SetDPI(float64(dpi))
-	fontface = &FontFace{
-		font:    font,
-		charw:   float32(bounds.Max.X-bounds.Min.X) / 64,
-		charh:   float32(bounds.Max.Y-bounds.Min.Y) / 64,
-		offy:    float32(bounds.Min.Y) / 64,
-		fg:      fg,
-		bg:      bg,
-		context: context,
-	}
-	return
-}
-
-func (ff *FontFace) GetImage(text string) (img draw.Image, err error) {
-	var (
-		src image.Image
-		bg  image.Image
-		dst draw.Image
-		pt  fixed.Point26_6
-		w   int
-		h   int
-	)
-	src = image.NewUniform(ff.fg)
-	bg = image.NewUniform(ff.bg)
-	w = int(float32(len(text)) * ff.charw)
-	h = int(ff.charh)
-	dst = image.NewRGBA(image.Rect(0, 0, w, h))
-	draw.Draw(dst, dst.Bounds(), bg, image.ZP, draw.Src)
-	ff.context.SetSrc(src)
-	ff.context.SetDst(dst)
-	ff.context.SetClip(dst.Bounds())
-	pt = freetype.Pt(0, int(ff.charh+ff.offy))
-	if pt, err = ff.context.DrawString(text, pt); err != nil {
-		return
-	}
-	img = image.NewRGBA(image.Rect(0, 0, int(pt.X/64), int(pt.Y/64)))
-	draw.Draw(img, img.Bounds(), dst, image.Pt(0, -int(ff.offy)), draw.Src)
-	return
-}
-
-func (ff *FontFace) GetText(text string) (t *common.Texture, err error) {
-	var (
-		img image.Image
-	)
-	if img, err = ff.GetImage(text); err != nil {
-		return
-	}
-	t, err = common.GetTexture(img, gl.NEAREST)
-	return
 }
