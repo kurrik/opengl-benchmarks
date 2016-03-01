@@ -20,11 +20,11 @@ import (
 
 type TextID int32
 
-type textDataPoint struct {
+type rendererInstance struct {
 	model mgl32.Mat4
 	tile  float32
 }
 
-type textData struct {
-	Points []textDataPoint
+type rendererData struct {
+	Instances []rendererInstance
 }

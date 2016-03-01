@@ -78,7 +78,7 @@ void main() {
 type Renderer struct {
 	shader *common.Program
 	stride uintptr
-	data   *textData
+	data   *rendererData
 	ubo    *common.UniformBuffer
 	vbo    *common.ArrayBuffer
 	uView  *common.Uniform
@@ -93,7 +93,7 @@ func NewRenderer() (r *Renderer, err error) {
 		return
 	}
 	r.shader.Bind()
-	var point textDataPoint
+	var point rendererInstance
 	r.stride = unsafe.Sizeof(point)
 	r.vbo = common.NewArrayBuffer(r.shader.ID(), r.stride)
 	r.vbo.Float("f_Tile", unsafe.Offsetof(point.tile), 1)
@@ -130,26 +130,26 @@ func (r *Renderer) Render(camera *common.Camera, textureData []float32) (err err
 		rot2   = mgl32.HomogRotate3DZ(mgl32.DegToRad(15.0))
 	)
 
-	r.data = &textData{
-		Points: []textDataPoint{
-			textDataPoint{
+	r.data = &rendererData{
+		Instances: []rendererInstance{
+			rendererInstance{
 				model: rot1.Mul4(scale),
 				tile:  2,
 			},
-			textDataPoint{
+			rendererInstance{
 				model: trans2.Mul4(rot2).Mul4(scale),
 				tile:  7,
 			},
 		},
 	}
 	var (
-		vboBytes = len(r.data.Points) * int(r.stride)
+		vboBytes = len(r.data.Instances) * int(r.stride)
 		point    float32
 		uboBytes = len(textureData) * int(unsafe.Sizeof(point))
 	)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	r.vbo.Upload(r.data.Points, vboBytes)
+	r.vbo.Upload(r.data.Instances, vboBytes)
 	r.ubo.Upload(textureData, uboBytes)
 	ptsPerInstance := 6
 	instanceCount := 2

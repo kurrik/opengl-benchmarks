@@ -21,25 +21,27 @@ import (
 	"image/draw"
 )
 
-type TextManager struct {
+type Manager struct {
 	nextID        TextID
 	packedImage   *binpacking.PackedImage
 	packedTexture *common.Texture
+	indices       map[TextID]int
 }
 
-func NewTextManager() *TextManager {
-	return &TextManager{
+func NewManager() *Manager {
+	return &Manager{
 		packedImage: binpacking.NewPackedImage(512, 512),
+		indices:     map[TextID]int{},
 	}
 }
 
-func (t *TextManager) CreateText() (id TextID) {
+func (t *Manager) CreateText() (id TextID) {
 	id = t.nextID
 	t.nextID += 1
 	return
 }
 
-func (t *TextManager) SetText(id TextID, text string, font *FontFace) (err error) {
+func (t *Manager) SetText(id TextID, text string, font *FontFace) (err error) {
 	var (
 		img draw.Image
 		key = fmt.Sprintf("%v", id)
@@ -48,6 +50,9 @@ func (t *TextManager) SetText(id TextID, text string, font *FontFace) (err error
 		return
 	}
 	t.packedImage.Pack(key, img)
+	if t.indices[id], err = t.packedImage.Index(key); err != nil {
+		return
+	}
 	if t.packedTexture, err = common.GetTexture(
 		t.packedImage.Image(),
 		common.SmoothingLinear,
@@ -57,19 +62,19 @@ func (t *TextManager) SetText(id TextID, text string, font *FontFace) (err error
 	return
 }
 
-func (t *TextManager) Bind() {
+func (t *Manager) Bind() {
 	if t.packedTexture != nil {
 		t.packedTexture.Bind()
 	}
 }
 
-func (t *TextManager) Unbind() {
+func (t *Manager) Unbind() {
 	if t.packedTexture != nil {
 		t.packedTexture.Unbind()
 	}
 }
 
-func (t *TextManager) Delete() {
+func (t *Manager) Delete() {
 	if t.packedTexture != nil {
 		t.packedTexture.Delete()
 		t.packedTexture = nil
