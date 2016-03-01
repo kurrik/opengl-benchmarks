@@ -80,17 +80,16 @@ func (m *Manager) getInstance(id ID) (instance *Instance, err error) {
 func (m *Manager) SetText(id ID, text string, font *FontFace) (err error) {
 	var (
 		img      draw.Image
-		key      = fmt.Sprintf("%v", id)
 		instance *Instance
 	)
 	if img, err = font.GetImage(text); err != nil {
 		return
 	}
-	m.PackedImage.Pack(key, img)
+	m.PackedImage.Pack(text, img)
 	if instance, err = m.getInstance(id); err != nil {
 		return
 	}
-	if instance.tile, err = m.PackedImage.Tile(key); err != nil {
+	if instance.tile, err = m.PackedImage.Tile(text); err != nil {
 		return
 	}
 	instance.dirty = true

@@ -57,7 +57,12 @@ func (i *PackedImage) Pack(key string, img image.Image) {
 		w         int             = imgBounds.Max.X
 		h         int             = imgBounds.Max.Y
 		maxW      int             = texBounds.Max.X
+		exists    bool
 	)
+	if _, exists = i.tiles[key]; exists {
+		// Don't need to pack since it's already in here
+		return
+	}
 	for j, s = range i.shelves {
 		if s.CanAdd(w, h, maxW) {
 			score = s.BestAreaFit(w, h, maxW)
