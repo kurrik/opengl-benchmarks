@@ -22,10 +22,20 @@ type ID int32
 
 type Instance struct {
 	renderIndex int
-	packedIndex int
+	tile        int
 	position    mgl32.Vec3
 	rotation    float32
 	dirty       bool
+}
+
+func (i *Instance) SetPosition(p mgl32.Vec3) {
+	i.position = p
+	i.dirty = true
+}
+
+func (i *Instance) SetRotation(r float32) {
+	i.rotation = r
+	i.dirty = true
 }
 
 type rendererInstance struct {
@@ -34,6 +44,6 @@ type rendererInstance struct {
 }
 
 type rendererData struct {
-	Count int
+	Count     int
 	Instances []rendererInstance
 }

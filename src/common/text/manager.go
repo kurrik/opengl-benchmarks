@@ -56,7 +56,7 @@ func (m *Manager) CreateText() (id ID, err error) {
 	id = m.nextID
 	m.instances[id] = &Instance{
 		renderIndex: m.rendererData.Count,
-		packedIndex: 0,
+		tile:        0,
 		position:    mgl32.Vec3{0, 0, 0},
 		rotation:    0,
 		dirty:       true,
@@ -90,7 +90,7 @@ func (m *Manager) SetText(id ID, text string, font *FontFace) (err error) {
 	if instance, err = m.getInstance(id); err != nil {
 		return
 	}
-	if instance.packedIndex, err = m.PackedImage.Index(key); err != nil {
+	if instance.tile, err = m.PackedImage.Tile(key); err != nil {
 		return
 	}
 	instance.dirty = true
@@ -143,7 +143,7 @@ func (m *Manager) Render(camera *common.Camera) {
 	for _, instance = range m.instances {
 		if instance.dirty {
 			rInstance = &m.rendererData.Instances[instance.renderIndex]
-			rInstance.tile = float32(instance.packedIndex)
+			rInstance.tile = float32(instance.tile)
 			rot = mgl32.HomogRotate3DZ(mgl32.DegToRad(instance.rotation))
 			trans = mgl32.Translate3D(
 				instance.position.X(),
@@ -151,6 +151,7 @@ func (m *Manager) Render(camera *common.Camera) {
 				instance.position.Z(),
 			)
 			rInstance.model = trans.Mul4(rot).Mul4(scale)
+			instance.dirty = false
 		}
 	}
 	m.renderer.Render(camera, &m.rendererData, m.PackedImage.Data)

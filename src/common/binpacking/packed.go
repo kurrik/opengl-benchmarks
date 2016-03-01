@@ -25,6 +25,8 @@ type PackedImage struct {
 	img       draw.Image
 	shelves   []*shelf
 	locations map[string]int
+	tiles     map[string]int
+	count     int
 	Data      []float32
 }
 
@@ -34,6 +36,8 @@ func NewPackedImage(w, h int) (i *PackedImage) {
 		shelves:   []*shelf{newShelf()},
 		locations: map[string]int{},
 		Data:      []float32{},
+		count:     0,
+		tiles:     map[string]int{},
 	}
 }
 
@@ -74,11 +78,13 @@ func (i *PackedImage) Pack(key string, img image.Image) {
 		destRect = image.Rectangle{destPt, destPt.Add(imgBounds.Max)}
 	)
 	i.locations[key] = len(i.Data) - 1
+	i.tiles[key] = i.count
+	i.count += 1
 	i.Data = append(i.Data,
-		float32(w) / float32(texBounds.Max.X),
-		float32(h) / float32(texBounds.Max.Y),
-		float32(x) / float32(texBounds.Max.X),
-		1.0 - float32(y + h) / float32(texBounds.Max.Y),
+		float32(w)/float32(texBounds.Max.X),
+		float32(h)/float32(texBounds.Max.Y),
+		float32(x)/float32(texBounds.Max.X),
+		1.0-float32(y+h)/float32(texBounds.Max.Y),
 		float32(w),
 		float32(h),
 		0,
@@ -105,11 +111,11 @@ func (i *PackedImage) Bounds(key string) (out mgl32.Vec4, err error) {
 	return
 }
 
-func (i *PackedImage) Index(key string) (out int, err error) {
+func (i *PackedImage) Tile(key string) (out int, err error) {
 	var (
 		ok bool
 	)
-	if out, ok = i.locations[key]; !ok {
+	if out, ok = i.tiles[key]; !ok {
 		err = fmt.Errorf("Packed image did not contain key %v", key)
 		return
 	}

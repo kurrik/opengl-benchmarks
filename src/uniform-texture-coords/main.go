@@ -25,6 +25,13 @@ import (
 	"runtime"
 )
 
+type Inst struct {
+	Text string
+	X    float32
+	Y    float32
+	R    float32
+}
+
 func init() {
 	// See https://code.google.com/p/go/issues/detail?id=3527
 	runtime.LockOSThread()
@@ -48,6 +55,7 @@ func main() {
 		textMgr   *text.Manager
 		err       error
 		id        text.ID
+		inst      *text.Instance
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -70,22 +78,21 @@ func main() {
 	if font, err = text.NewFontFace("src/resources/Roboto-Light.ttf", 30, fg, bg); err != nil {
 		panic(err)
 	}
-	for _, s := range []string{
-		"another string to add",
-		"More string!",
-		//"Woo",
-		//"Packing more string",
-		//"Add",
-		//"More",
-		//"String",
-		//"Framerate 59",
-		//"Framerate 60",
-		//"Framerate 20",
+	for _, s := range []Inst{
+		Inst{Text: "This is text!", X: 0, Y: 0, R: 0},
+		Inst{Text: "More text!", X: 1, Y: 1, R: 15},
 	} {
 		if id, err = textMgr.CreateText(); err != nil {
 			panic(err)
 		}
-		textMgr.SetText(id, s, font)
+		if err = textMgr.SetText(id, s.Text, font); err != nil {
+			panic(err)
+		}
+		if inst, err = textMgr.GetInstance(id); err != nil {
+			return
+		}
+		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
+		inst.SetRotation(s.R)
 	}
 	if err = common.WritePNG("test-packed.png", textMgr.PackedImage.Image()); err != nil {
 		panic(err)
