@@ -56,6 +56,7 @@ func main() {
 		err       error
 		id        text.ID
 		inst      *text.Instance
+		rot       float32 = 0
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -108,6 +109,8 @@ func main() {
 		textMgr.Render(camera)
 		textMgr.Unbind()
 		context.SwapBuffers()
+		inst.SetRotation(rot)
+		rot += 1
 	}
 	textMgr.Delete()
 }
