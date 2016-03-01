@@ -47,6 +47,7 @@ func main() {
 		bg        = color.RGBA{64, 128, 64, 128}
 		textMgr   *text.Manager
 		err       error
+		id        text.ID
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -72,16 +73,18 @@ func main() {
 	for _, s := range []string{
 		"another string to add",
 		"More string!",
-		"Woo",
-		"Packing more string",
-		"Add",
-		"More",
-		"String",
-		"Framerate 59",
-		"Framerate 60",
-		"Framerate 20",
+		//"Woo",
+		//"Packing more string",
+		//"Add",
+		//"More",
+		//"String",
+		//"Framerate 59",
+		//"Framerate 60",
+		//"Framerate 20",
 	} {
-		id := textMgr.CreateText()
+		if id, err = textMgr.CreateText(); err != nil {
+			panic(err)
+		}
 		textMgr.SetText(id, s, font)
 	}
 	if err = common.WritePNG("test-packed.png", textMgr.PackedImage.Image()); err != nil {

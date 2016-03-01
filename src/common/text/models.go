@@ -18,12 +18,14 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type TextID int32
+type ID int32
 
-type managerInstance struct {
+type Instance struct {
+	renderIndex int
 	packedIndex int
-	position mgl32.Vec2
-	rotation float32
+	position    mgl32.Vec3
+	rotation    float32
+	dirty       bool
 }
 
 type rendererInstance struct {
@@ -32,5 +34,6 @@ type rendererInstance struct {
 }
 
 type rendererData struct {
+	Count int
 	Instances []rendererInstance
 }

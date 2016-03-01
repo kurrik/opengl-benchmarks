@@ -24,20 +24,23 @@ import (
 
 type Manager struct {
 	PackedImage   *binpacking.PackedImage
-	nextID        TextID
+	nextID        ID
 	packedTexture *common.Texture
-	instances     map[TextID]*managerInstance
-	rendererData  []rendererInstance
 	renderer      *Renderer
 	maxInstances  uint32
+	instances     map[ID]*Instance
+	rendererData  rendererData
 }
 
 func NewManager(maxInstances uint32) (mgr *Manager, err error) {
 	mgr = &Manager{
 		PackedImage:  binpacking.NewPackedImage(512, 512),
-		instances:    map[TextID]*managerInstance{},
 		maxInstances: maxInstances,
-		rendererData: make([]rendererInstance, maxInstances),
+		instances:    map[ID]*Instance{},
+		rendererData: rendererData{
+			Count:     0,
+			Instances: make([]rendererInstance, maxInstances),
+		},
 	}
 	if mgr.renderer, err = NewRenderer(); err != nil {
 		return
@@ -45,32 +48,52 @@ func NewManager(maxInstances uint32) (mgr *Manager, err error) {
 	return
 }
 
-func (m *Manager) CreateText() (id TextID) {
+func (m *Manager) CreateText() (id ID, err error) {
+	if uint32(m.rendererData.Count) >= m.maxInstances {
+		err = fmt.Errorf("Max text instances reached")
+		return
+	}
 	id = m.nextID
+	m.instances[id] = &Instance{
+		renderIndex: m.rendererData.Count,
+		packedIndex: 0,
+		position:    mgl32.Vec3{0, 0, 0},
+		rotation:    0,
+		dirty:       true,
+	}
 	m.nextID += 1
+	m.rendererData.Count += 1
 	return
 }
 
-func (m *Manager) ensureInstance(id TextID) {
-	var exists bool
-	if _, exists = m.instances[id]; !exists {
-		m.instances[id] = &managerInstance{}
+func (m *Manager) getInstance(id ID) (instance *Instance, err error) {
+	var (
+		exists bool
+	)
+	if instance, exists = m.instances[id]; !exists {
+		err = fmt.Errorf("Invalid text instance ID: %v", id)
+		return
 	}
+	return
 }
 
-func (m *Manager) SetText(id TextID, text string, font *FontFace) (err error) {
+func (m *Manager) SetText(id ID, text string, font *FontFace) (err error) {
 	var (
-		img draw.Image
-		key = fmt.Sprintf("%v", id)
+		img      draw.Image
+		key      = fmt.Sprintf("%v", id)
+		instance *Instance
 	)
 	if img, err = font.GetImage(text); err != nil {
 		return
 	}
-	m.ensureInstance(id)
 	m.PackedImage.Pack(key, img)
-	if m.instances[id].packedIndex, err = m.PackedImage.Index(key); err != nil {
+	if instance, err = m.getInstance(id); err != nil {
 		return
 	}
+	if instance.packedIndex, err = m.PackedImage.Index(key); err != nil {
+		return
+	}
+	instance.dirty = true
 	if m.packedTexture, err = common.GetTexture(
 		m.PackedImage.Image(),
 		common.SmoothingLinear,
@@ -80,9 +103,11 @@ func (m *Manager) SetText(id TextID, text string, font *FontFace) (err error) {
 	return
 }
 
-func (m *Manager) SetPosition(id TextID, position mgl32.Vec2) {
-	m.ensureInstance(id)
-	m.instances[id].position = position
+func (m *Manager) GetInstance(id ID) (instance *Instance, err error) {
+	if instance, err = m.getInstance(id); err != nil {
+		return
+	}
+	return
 }
 
 func (m *Manager) Bind() {
@@ -108,24 +133,25 @@ func (m *Manager) Delete() {
 }
 
 func (m *Manager) Render(camera *common.Camera) {
-	// Temporary:
 	var (
-		scale  = mgl32.Scale3D(1.0/128.0, 1.0/128.0, 1.0)
-		rot1   = mgl32.HomogRotate3DZ(mgl32.DegToRad(5.0))
-		trans2 = mgl32.Translate3D(1, 1, 0)
-		rot2   = mgl32.HomogRotate3DZ(mgl32.DegToRad(15.0))
+		instance  *Instance
+		rInstance *rendererInstance
+		scale     = mgl32.Scale3D(1.0/128.0, 1.0/128.0, 1.0)
+		rot       mgl32.Mat4
+		trans     mgl32.Mat4
 	)
-	data := &rendererData{
-		Instances: []rendererInstance{
-			rendererInstance{
-				model: rot1.Mul4(scale),
-				tile:  2,
-			},
-			rendererInstance{
-				model: trans2.Mul4(rot2).Mul4(scale),
-				tile:  7,
-			},
-		},
+	for _, instance = range m.instances {
+		if instance.dirty {
+			rInstance = &m.rendererData.Instances[instance.renderIndex]
+			rInstance.tile = float32(instance.packedIndex)
+			rot = mgl32.HomogRotate3DZ(mgl32.DegToRad(instance.rotation))
+			trans = mgl32.Translate3D(
+				instance.position.X(),
+				instance.position.Y(),
+				instance.position.Z(),
+			)
+			rInstance.model = trans.Mul4(rot).Mul4(scale)
+		}
 	}
-	m.renderer.Render(camera, data, m.PackedImage.Data)
+	m.renderer.Render(camera, &m.rendererData, m.PackedImage.Data)
 }

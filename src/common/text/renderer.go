@@ -122,7 +122,7 @@ func (r *Renderer) Delete() {
 
 func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData []float32) (err error) {
 	var (
-		vboBytes = len(data.Instances) * int(r.stride)
+		vboBytes = data.Count * int(r.stride)
 		point    float32
 		uboBytes = len(textureData) * int(unsafe.Sizeof(point))
 	)
@@ -131,8 +131,7 @@ func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData
 	r.vbo.Upload(data.Instances, vboBytes)
 	r.ubo.Upload(textureData, uboBytes)
 	ptsPerInstance := 6
-	instanceCount := 2
-	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(instanceCount))
+	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(data.Count))
 	if e := gl.GetError(); e != 0 {
 		err = fmt.Errorf("ERROR: OpenGL error %X", e)
 	}
