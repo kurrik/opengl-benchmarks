@@ -20,6 +20,12 @@ import (
 
 type TextID int32
 
+type managerInstance struct {
+	packedIndex int
+	position mgl32.Vec2
+	rotation float32
+}
+
 type rendererInstance struct {
 	model mgl32.Mat4
 	tile  float32

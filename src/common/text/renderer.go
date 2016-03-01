@@ -17,7 +17,6 @@ package text
 import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
-	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"unsafe"
 )
@@ -121,35 +120,15 @@ func (r *Renderer) Delete() {
 	r.ubo.Delete()
 }
 
-func (r *Renderer) Render(camera *common.Camera, textureData []float32) (err error) {
-	// Temporary:
+func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData []float32) (err error) {
 	var (
-		scale  = mgl32.Scale3D(1.0/128.0, 1.0/128.0, 1.0)
-		rot1   = mgl32.HomogRotate3DZ(mgl32.DegToRad(5.0))
-		trans2 = mgl32.Translate3D(1, 1, 0)
-		rot2   = mgl32.HomogRotate3DZ(mgl32.DegToRad(15.0))
-	)
-
-	r.data = &rendererData{
-		Instances: []rendererInstance{
-			rendererInstance{
-				model: rot1.Mul4(scale),
-				tile:  2,
-			},
-			rendererInstance{
-				model: trans2.Mul4(rot2).Mul4(scale),
-				tile:  7,
-			},
-		},
-	}
-	var (
-		vboBytes = len(r.data.Instances) * int(r.stride)
+		vboBytes = len(data.Instances) * int(r.stride)
 		point    float32
 		uboBytes = len(textureData) * int(unsafe.Sizeof(point))
 	)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	r.vbo.Upload(r.data.Instances, vboBytes)
+	r.vbo.Upload(data.Instances, vboBytes)
 	r.ubo.Upload(textureData, uboBytes)
 	ptsPerInstance := 6
 	instanceCount := 2

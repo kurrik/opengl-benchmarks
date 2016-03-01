@@ -18,12 +18,10 @@ import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/binpacking"
 	"github.com/kurrik/opengl-benchmarks/common/renderers"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
 	"image/color"
-	"image/draw"
 	"runtime"
 )
 
@@ -40,18 +38,15 @@ func main() {
 	)
 
 	var (
-		context       *common.Context
-		sprites       *spritesheet.Sprites
-		camera        *common.Camera
-		framerate     *renderers.Framerate
-		textRenderer  *text.Renderer
-		font          *text.FontFace
-		fg            = color.RGBA{255, 255, 255, 255}
-		bg            = color.RGBA{64, 128, 64, 128}
-		img           draw.Image
-		packed        *binpacking.PackedImage
-		packedTexture *common.Texture
-		err           error
+		context   *common.Context
+		sprites   *spritesheet.Sprites
+		camera    *common.Camera
+		framerate *renderers.Framerate
+		font      *text.FontFace
+		fg        = color.RGBA{255, 255, 255, 255}
+		bg        = color.RGBA{64, 128, 64, 128}
+		textMgr   *text.Manager
+		err       error
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -65,7 +60,7 @@ func main() {
 	if framerate, err = renderers.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}
-	if textRenderer, err = text.NewRenderer(); err != nil {
+	if textMgr, err = text.NewManager(100); err != nil {
 		panic(err)
 	}
 	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6, 4, 2}); err != nil {
@@ -74,14 +69,10 @@ func main() {
 	if font, err = text.NewFontFace("src/resources/Roboto-Light.ttf", 30, fg, bg); err != nil {
 		panic(err)
 	}
-	if img, err = font.GetImage("foo bar baz Baj george"); err != nil {
-		panic(err)
-	}
-
-	packed = binpacking.NewPackedImage(1024, 512)
 	for _, s := range []string{
 		"another string to add",
 		"More string!",
+		"Woo",
 		"Packing more string",
 		"Add",
 		"More",
@@ -90,18 +81,10 @@ func main() {
 		"Framerate 60",
 		"Framerate 20",
 	} {
-		if img, err = font.GetImage(s); err != nil {
-			panic(err)
-		}
-		packed.Pack(s, img)
+		id := textMgr.CreateText()
+		textMgr.SetText(id, s, font)
 	}
-	if err = common.WritePNG("test-packed.png", packed.Image()); err != nil {
-		panic(err)
-	}
-	if err = common.WritePNG("test-font.png", img); err != nil {
-		panic(err)
-	}
-	if packedTexture, err = common.GetTexture(packed.Image(), common.SmoothingLinear); err != nil {
+	if err = common.WritePNG("test-packed.png", textMgr.PackedImage.Image()); err != nil {
 		panic(err)
 	}
 	fmt.Printf("Sheet: %v\n", sprites.Sheet)
@@ -111,11 +94,10 @@ func main() {
 		framerate.Bind()
 		framerate.Render(camera)
 		framerate.Unbind()
-		packedTexture.Bind()
-		textRenderer.Bind()
-		textRenderer.Render(camera, packed.Data)
-		textRenderer.Unbind()
-		packedTexture.Unbind()
+		textMgr.Bind()
+		textMgr.Render(camera)
+		textMgr.Unbind()
 		context.SwapBuffers()
 	}
+	textMgr.Delete()
 }

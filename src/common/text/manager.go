@@ -16,32 +16,49 @@ package text
 
 import (
 	"fmt"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/binpacking"
 	"image/draw"
 )
 
 type Manager struct {
+	PackedImage   *binpacking.PackedImage
 	nextID        TextID
-	packedImage   *binpacking.PackedImage
 	packedTexture *common.Texture
-	indices       map[TextID]int
+	instances     map[TextID]*managerInstance
+	rendererData  []rendererInstance
+	renderer      *Renderer
+	maxInstances  uint32
 }
 
-func NewManager() *Manager {
-	return &Manager{
-		packedImage: binpacking.NewPackedImage(512, 512),
-		indices:     map[TextID]int{},
+func NewManager(maxInstances uint32) (mgr *Manager, err error) {
+	mgr = &Manager{
+		PackedImage:  binpacking.NewPackedImage(512, 512),
+		instances:    map[TextID]*managerInstance{},
+		maxInstances: maxInstances,
+		rendererData: make([]rendererInstance, maxInstances),
 	}
-}
-
-func (t *Manager) CreateText() (id TextID) {
-	id = t.nextID
-	t.nextID += 1
+	if mgr.renderer, err = NewRenderer(); err != nil {
+		return
+	}
 	return
 }
 
-func (t *Manager) SetText(id TextID, text string, font *FontFace) (err error) {
+func (m *Manager) CreateText() (id TextID) {
+	id = m.nextID
+	m.nextID += 1
+	return
+}
+
+func (m *Manager) ensureInstance(id TextID) {
+	var exists bool
+	if _, exists = m.instances[id]; !exists {
+		m.instances[id] = &managerInstance{}
+	}
+}
+
+func (m *Manager) SetText(id TextID, text string, font *FontFace) (err error) {
 	var (
 		img draw.Image
 		key = fmt.Sprintf("%v", id)
@@ -49,12 +66,13 @@ func (t *Manager) SetText(id TextID, text string, font *FontFace) (err error) {
 	if img, err = font.GetImage(text); err != nil {
 		return
 	}
-	t.packedImage.Pack(key, img)
-	if t.indices[id], err = t.packedImage.Index(key); err != nil {
+	m.ensureInstance(id)
+	m.PackedImage.Pack(key, img)
+	if m.instances[id].packedIndex, err = m.PackedImage.Index(key); err != nil {
 		return
 	}
-	if t.packedTexture, err = common.GetTexture(
-		t.packedImage.Image(),
+	if m.packedTexture, err = common.GetTexture(
+		m.PackedImage.Image(),
 		common.SmoothingLinear,
 	); err != nil {
 		return
@@ -62,21 +80,52 @@ func (t *Manager) SetText(id TextID, text string, font *FontFace) (err error) {
 	return
 }
 
-func (t *Manager) Bind() {
-	if t.packedTexture != nil {
-		t.packedTexture.Bind()
-	}
+func (m *Manager) SetPosition(id TextID, position mgl32.Vec2) {
+	m.ensureInstance(id)
+	m.instances[id].position = position
 }
 
-func (t *Manager) Unbind() {
-	if t.packedTexture != nil {
-		t.packedTexture.Unbind()
+func (m *Manager) Bind() {
+	if m.packedTexture != nil {
+		m.packedTexture.Bind()
 	}
+	m.renderer.Bind()
 }
 
-func (t *Manager) Delete() {
-	if t.packedTexture != nil {
-		t.packedTexture.Delete()
-		t.packedTexture = nil
+func (m *Manager) Unbind() {
+	if m.packedTexture != nil {
+		m.packedTexture.Unbind()
 	}
+	m.renderer.Unbind()
+}
+
+func (m *Manager) Delete() {
+	if m.packedTexture != nil {
+		m.packedTexture.Delete()
+		m.packedTexture = nil
+	}
+	m.renderer.Delete()
+}
+
+func (m *Manager) Render(camera *common.Camera) {
+	// Temporary:
+	var (
+		scale  = mgl32.Scale3D(1.0/128.0, 1.0/128.0, 1.0)
+		rot1   = mgl32.HomogRotate3DZ(mgl32.DegToRad(5.0))
+		trans2 = mgl32.Translate3D(1, 1, 0)
+		rot2   = mgl32.HomogRotate3DZ(mgl32.DegToRad(15.0))
+	)
+	data := &rendererData{
+		Instances: []rendererInstance{
+			rendererInstance{
+				model: rot1.Mul4(scale),
+				tile:  2,
+			},
+			rendererInstance{
+				model: trans2.Mul4(rot2).Mul4(scale),
+				tile:  7,
+			},
+		},
+	}
+	m.renderer.Render(camera, data, m.PackedImage.Data)
 }
