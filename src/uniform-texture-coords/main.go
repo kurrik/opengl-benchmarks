@@ -56,7 +56,7 @@ func main() {
 		err       error
 		id        text.ID
 		inst      *text.Instance
-		rot       float32 = 0
+		rot       int = 0
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -95,9 +95,6 @@ func main() {
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
 		inst.SetRotation(s.R)
 	}
-	if err = common.WritePNG("test-packed.png", textMgr.PackedImage.Image()); err != nil {
-		panic(err)
-	}
 	fmt.Printf("Sheet: %v\n", sprites.Sheet)
 	for !context.ShouldClose() {
 		context.Events.Poll()
@@ -109,8 +106,13 @@ func main() {
 		textMgr.Render(camera)
 		textMgr.Unbind()
 		context.SwapBuffers()
-		inst.SetRotation(rot)
+
+		textMgr.SetText(id, fmt.Sprintf("Rotation %v", rot%10), font)
+		inst.SetRotation(float32(rot))
 		rot += 1
+	}
+	if err = common.WritePNG("test-packed.png", textMgr.PackedImage.Image()); err != nil {
+		panic(err)
 	}
 	textMgr.Delete()
 }
