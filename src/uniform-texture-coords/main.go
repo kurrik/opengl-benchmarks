@@ -44,7 +44,7 @@ func main() {
 		sprites       *spritesheet.Sprites
 		camera        *common.Camera
 		framerate     *renderers.Framerate
-		textRenderer  *renderers.Text
+		textRenderer  *text.Renderer
 		font          *text.FontFace
 		fg            = color.RGBA{255, 255, 255, 255}
 		bg            = color.RGBA{64, 128, 64, 128}
@@ -65,7 +65,7 @@ func main() {
 	if framerate, err = renderers.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}
-	if textRenderer, err = renderers.NewTextRenderer(); err != nil {
+	if textRenderer, err = text.NewRenderer(); err != nil {
 		panic(err)
 	}
 	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6, 4, 2}); err != nil {

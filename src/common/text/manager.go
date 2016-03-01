@@ -15,24 +15,35 @@
 package text
 
 import (
+	"fmt"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/binpacking"
 	"image/draw"
 )
 
-type Text struct {
+type TextManager struct {
+	nextID        TextID
 	packedImage   *binpacking.PackedImage
 	packedTexture *common.Texture
 }
 
-func NewText() *Text {
-	return &Text{
+func NewTextManager() *TextManager {
+	return &TextManager{
 		packedImage: binpacking.NewPackedImage(512, 512),
 	}
 }
 
-func (t *Text) Set(key, text string, font *FontFace) (err error) {
-	var img draw.Image
+func (t *TextManager) CreateText() (id TextID) {
+	id = t.nextID
+	t.nextID += 1
+	return
+}
+
+func (t *TextManager) SetText(id TextID, text string, font *FontFace) (err error) {
+	var (
+		img draw.Image
+		key = fmt.Sprintf("%v", id)
+	)
 	if img, err = font.GetImage(text); err != nil {
 		return
 	}
@@ -46,19 +57,19 @@ func (t *Text) Set(key, text string, font *FontFace) (err error) {
 	return
 }
 
-func (t *Text) Bind() {
+func (t *TextManager) Bind() {
 	if t.packedTexture != nil {
 		t.packedTexture.Bind()
 	}
 }
 
-func (t *Text) Unbind() {
+func (t *TextManager) Unbind() {
 	if t.packedTexture != nil {
 		t.packedTexture.Unbind()
 	}
 }
 
-func (t *Text) Delete() {
+func (t *TextManager) Delete() {
 	if t.packedTexture != nil {
 		t.packedTexture.Delete()
 		t.packedTexture = nil

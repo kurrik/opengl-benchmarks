@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package renderers
+package text
 
 import (
 	"fmt"
@@ -75,16 +75,7 @@ void main() {
   v_TexturePosition = TexturePoints[gl_VertexID] * t_Tile.texture.xy + t_Tile.texture.zw;
 }` + "\x00"
 
-type textDataPoint struct {
-	model mgl32.Mat4
-	tile  float32
-}
-
-type textData struct {
-	Points []textDataPoint
-}
-
-type Text struct {
+type Renderer struct {
 	shader *common.Program
 	stride uintptr
 	data   *textData
@@ -94,8 +85,8 @@ type Text struct {
 	uProj  *common.Uniform
 }
 
-func NewTextRenderer() (r *Text, err error) {
-	r = &Text{
+func NewRenderer() (r *Renderer, err error) {
+	r = &Renderer{
 		shader: common.NewProgram(),
 	}
 	if err = r.shader.Load(TEXT_VERTEX, TEXT_FRAGMENT); err != nil {
@@ -114,23 +105,23 @@ func NewTextRenderer() (r *Text, err error) {
 	return
 }
 
-func (r *Text) Bind() {
+func (r *Renderer) Bind() {
 	r.shader.Bind()
 	r.vbo.Bind()
 	r.ubo.Bind()
 }
 
-func (r *Text) Unbind() {
+func (r *Renderer) Unbind() {
 	r.shader.Unbind()
 }
 
-func (r *Text) Delete() {
+func (r *Renderer) Delete() {
 	r.shader.Delete()
 	r.vbo.Delete()
 	r.ubo.Delete()
 }
 
-func (r *Text) Render(camera *common.Camera, textureData []float32) (err error) {
+func (r *Renderer) Render(camera *common.Camera, textureData []float32) (err error) {
 	// Temporary:
 	var (
 		scale  = mgl32.Scale3D(1.0/128.0, 1.0/128.0, 1.0)
