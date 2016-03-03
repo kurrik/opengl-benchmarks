@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package binpacking
-
-import ()
+package text
 
 type shelf struct {
 	x      int

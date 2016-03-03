@@ -18,12 +18,11 @@ import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/binpacking"
 	"image/draw"
 )
 
 type Manager struct {
-	PackedImage   *binpacking.PackedImage
+	PackedImage   *PackedImage
 	nextID        ID
 	packedTexture *common.Texture
 	renderer      *Renderer
@@ -34,7 +33,7 @@ type Manager struct {
 
 func NewManager(maxInstances uint32) (mgr *Manager, err error) {
 	mgr = &Manager{
-		PackedImage:  binpacking.NewPackedImage(512, 512),
+		PackedImage:  NewPackedImage(512, 512),
 		maxInstances: maxInstances,
 		instances:    map[ID]*Instance{},
 		rendererData: rendererData{
