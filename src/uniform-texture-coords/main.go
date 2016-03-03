@@ -73,7 +73,7 @@ func main() {
 	if textMgr, err = text.NewManager(100); err != nil {
 		panic(err)
 	}
-	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6, 4, 2}); err != nil {
+	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6.4, 4.8, 2}); err != nil {
 		panic(err)
 	}
 	if font, err = text.NewFontFace("src/resources/Roboto-Light.ttf", 30, fg, bg); err != nil {

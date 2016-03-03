@@ -23,6 +23,7 @@ type Camera struct {
 	WorldCenter mgl32.Vec3
 	WorldSize   mgl32.Vec3
 	ScreenSize  mgl32.Vec2
+	PxPerUnit   mgl32.Vec2
 	Projection  mgl32.Mat4
 	View        mgl32.Mat4
 	Inverse     mgl32.Mat4
@@ -39,11 +40,13 @@ func NewCamera(worldCenter, worldSize mgl32.Vec3, screenSize mgl32.Vec2) (c *Cam
 
 func (c *Camera) SetScreenSize(screenSize mgl32.Vec2) {
 	c.ScreenSize = screenSize
+	c.calcPxPerUnit()
 }
 
 func (c *Camera) SetWorldBounds(worldCenter, worldSize mgl32.Vec3) (err error) {
 	c.WorldCenter = worldCenter
 	c.WorldSize = worldSize
+	c.calcPxPerUnit()
 	var (
 		defaultMat4 mgl32.Mat4
 		half        = c.WorldSize.Mul(0.5)
@@ -62,6 +65,13 @@ func (c *Camera) SetWorldBounds(worldCenter, worldSize mgl32.Vec3) (err error) {
 		err = fmt.Errorf("Projection matrix not invertible")
 	}
 	return
+}
+
+func (c *Camera) calcPxPerUnit() {
+	c.PxPerUnit = mgl32.Vec2{
+		c.ScreenSize.X() / c.WorldSize.X(),
+		c.ScreenSize.Y() / c.WorldSize.Y(),
+	}
 }
 
 func (c *Camera) unproject(pt mgl32.Vec2) mgl32.Vec2 {
