@@ -22,6 +22,8 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
 	"image/color"
+	"log"
+	"os"
 	"runtime"
 )
 
@@ -70,7 +72,12 @@ func main() {
 	if framerate, err = renderers.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}
-	if textMgr, err = text.NewManager(100); err != nil {
+	if textMgr, err = text.NewManager(text.ManagerConfig{
+		MaxInstances:  100,
+		TextureWidth:  512,
+		TextureHeight: 512,
+		Logger:        log.New(os.Stderr, "", log.Lshortfile|log.LstdFlags),
+	}); err != nil {
 		panic(err)
 	}
 	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6.4, 4.8, 2}); err != nil {
@@ -90,7 +97,7 @@ func main() {
 			panic(err)
 		}
 		if inst, err = textMgr.GetInstance(id); err != nil {
-			return
+			panic(err)
 		}
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
 		inst.SetRotation(s.R)
@@ -107,7 +114,10 @@ func main() {
 		textMgr.Unbind()
 		context.SwapBuffers()
 
-		textMgr.SetText(id, fmt.Sprintf("Rotation %v", rot%10), font)
+		if err = textMgr.SetText(id, fmt.Sprintf("Rotation %v", rot%100), font); err != nil {
+			fmt.Printf("ERROR: %v\n", err)
+			break
+		}
 		inst.SetRotation(float32(rot))
 		rot += 1
 	}

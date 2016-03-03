@@ -26,6 +26,7 @@ type Instance struct {
 	position    mgl32.Vec3
 	rotation    float32
 	dirty       bool
+	Text string
 }
 
 func (i *Instance) SetPosition(p mgl32.Vec3) {

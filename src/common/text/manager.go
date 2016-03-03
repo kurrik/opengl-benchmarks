@@ -19,26 +19,34 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"image/draw"
+	"log"
 )
 
+type ManagerConfig struct {
+	MaxInstances  uint32
+	TextureWidth  int
+	TextureHeight int
+	Logger        *log.Logger
+}
+
 type Manager struct {
+	config        ManagerConfig
 	PackedImage   *PackedImage
 	nextID        ID
 	packedTexture *common.Texture
 	renderer      *Renderer
-	maxInstances  uint32
 	instances     map[ID]*Instance
 	rendererData  rendererData
 }
 
-func NewManager(maxInstances uint32) (mgr *Manager, err error) {
+func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
 	mgr = &Manager{
-		PackedImage:  NewPackedImage(512, 512),
-		maxInstances: maxInstances,
-		instances:    map[ID]*Instance{},
+		PackedImage: NewPackedImage(cfg.TextureWidth, cfg.TextureHeight),
+		config:      cfg,
+		instances:   map[ID]*Instance{},
 		rendererData: rendererData{
 			Count:     0,
-			Instances: make([]rendererInstance, maxInstances),
+			Instances: make([]rendererInstance, cfg.MaxInstances),
 		},
 	}
 	if mgr.renderer, err = NewRenderer(); err != nil {
@@ -48,7 +56,7 @@ func NewManager(maxInstances uint32) (mgr *Manager, err error) {
 }
 
 func (m *Manager) CreateText() (id ID, err error) {
-	if uint32(m.rendererData.Count) >= m.maxInstances {
+	if uint32(m.rendererData.Count) >= m.config.MaxInstances {
 		err = fmt.Errorf("Max text instances reached")
 		return
 	}
@@ -59,6 +67,7 @@ func (m *Manager) CreateText() (id ID, err error) {
 		position:    mgl32.Vec3{0, 0, 0},
 		rotation:    0,
 		dirty:       true,
+		Text:        "",
 	}
 	m.nextID += 1
 	m.rendererData.Count += 1
@@ -84,7 +93,15 @@ func (m *Manager) SetText(id ID, text string, font *FontFace) (err error) {
 	if img, err = font.GetImage(text); err != nil {
 		return
 	}
-	m.PackedImage.Pack(text, img)
+	if err = m.PackedImage.Pack(text, img); err != nil {
+		// Attempt to compact the texture.
+		if err = m.repackImage(); err != nil {
+			return
+		}
+		if err = m.PackedImage.Pack(text, img); err != nil {
+			return
+		}
+	}
 	if instance, err = m.getInstance(id); err != nil {
 		return
 	}
@@ -92,12 +109,45 @@ func (m *Manager) SetText(id ID, text string, font *FontFace) (err error) {
 		return
 	}
 	instance.dirty = true
+	instance.Text = text
+	if err = m.generateTexture(); err != nil {
+		return
+	}
+	return
+}
+
+func (m *Manager) generateTexture() (err error) {
+	if m.packedTexture != nil {
+		m.packedTexture.Delete()
+	}
 	if m.packedTexture, err = common.GetTexture(
 		m.PackedImage.Image(),
 		common.SmoothingLinear,
 	); err != nil {
 		return
 	}
+	return
+}
+
+func (m *Manager) repackImage() (err error) {
+	var (
+		newImage *PackedImage
+		instance *Instance
+	)
+	newImage = NewPackedImage(m.PackedImage.Width, m.PackedImage.Height)
+	for _, instance = range m.instances {
+		if err = newImage.Copy(instance.Text, m.PackedImage); err != nil {
+			return
+		}
+		if instance.tile, err = newImage.Tile(instance.Text); err != nil {
+			return
+		}
+	}
+	m.PackedImage = newImage
+	if err = m.generateTexture(); err != nil {
+		return
+	}
+	m.config.Logger.Printf("Repacked image\n")
 	return
 }
 
