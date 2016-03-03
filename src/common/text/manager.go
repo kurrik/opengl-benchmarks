@@ -138,7 +138,11 @@ func (m *Manager) Render(camera *common.Camera) {
 		rot       mgl32.Mat4
 		trans     mgl32.Mat4
 	)
-	scale = Scale3D(1.0/camera.PxPerUnit.X(), 1.0/camera.PxPerUnit.Y(), 1.0)
+	scale = mgl32.Scale3D(
+		1.0/camera.PxPerUnit.X(),
+		1.0/camera.PxPerUnit.Y(),
+		1.0,
+	)
 	for _, instance = range m.instances {
 		if instance.dirty {
 			rInstance = &m.rendererData.Instances[instance.renderIndex]

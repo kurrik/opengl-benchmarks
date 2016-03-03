@@ -40,8 +40,8 @@ func init() {
 func main() {
 	const (
 		WinTitle  = "uniform-texture-coords"
-		WinWidth  = 640
-		WinHeight = 480
+		WinWidth  = 600
+		WinHeight = 400
 	)
 
 	var (
@@ -51,7 +51,7 @@ func main() {
 		framerate *renderers.Framerate
 		font      *text.FontFace
 		fg        = color.RGBA{255, 255, 255, 255}
-		bg        = color.RGBA{64, 128, 64, 128}
+		bg        = color.RGBA{0, 0, 0, 255}
 		textMgr   *text.Manager
 		err       error
 		id        text.ID
@@ -76,11 +76,11 @@ func main() {
 	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6.4, 4.8, 2}); err != nil {
 		panic(err)
 	}
-	if font, err = text.NewFontFace("src/resources/Roboto-Light.ttf", 30, fg, bg); err != nil {
+	if font, err = text.NewFontFace("src/resources/Roboto-Light.ttf", 24, fg, bg); err != nil {
 		panic(err)
 	}
 	for _, s := range []Inst{
-		Inst{Text: "This is text!", X: 0, Y: 0, R: 0},
+		Inst{Text: "This is text!", X: 0.05, Y: 0.05, R: 0},
 		Inst{Text: "More text!", X: 1, Y: 1, R: 15},
 	} {
 		if id, err = textMgr.CreateText(); err != nil {
