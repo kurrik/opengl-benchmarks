@@ -30,7 +30,7 @@ type Logger struct {
 
 func NewLogger(level string) (out *Logger, err error) {
 	var (
-		flag   int = log.Lshortfile | log.LstdFlags
+		flag   int = log.Lshortfile | log.LstdFlags | log.Lmicroseconds
 		nilLog     = log.New(ioutil.Discard, "", flag)
 		writer     = os.Stderr
 	)
