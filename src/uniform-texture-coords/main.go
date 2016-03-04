@@ -15,6 +15,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
@@ -22,8 +23,6 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
 	"image/color"
-	"log"
-	"os"
 	"runtime"
 )
 
@@ -40,6 +39,12 @@ func init() {
 }
 
 func main() {
+	var (
+		flagLog string
+	)
+	flag.StringVar(&flagLog, "log", "error", "Logging level (one of 'debug', 'info' or 'error')")
+	flag.Parse()
+
 	const (
 		WinTitle  = "uniform-texture-coords"
 		WinWidth  = 600
@@ -59,7 +64,11 @@ func main() {
 		id        text.ID
 		inst      *text.Instance
 		rot       int = 0
+		logger    *common.Logger
 	)
+	if logger, err = common.NewLogger(flagLog); err != nil {
+		panic(err)
+	}
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
 	}
@@ -76,7 +85,7 @@ func main() {
 		MaxInstances:  100,
 		TextureWidth:  512,
 		TextureHeight: 512,
-		Logger:        log.New(os.Stderr, "", log.Lshortfile|log.LstdFlags),
+		Log:           logger,
 	}); err != nil {
 		panic(err)
 	}

@@ -1,4 +1,4 @@
-// Copyright 2015 Arne Roomann-Kurrik
+// Copyright 2016 Arne Roomann-Kurrik
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,18 +19,17 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"image/draw"
-	"log"
 )
 
 type ManagerConfig struct {
 	MaxInstances  uint32
 	TextureWidth  int
 	TextureHeight int
-	Logger        *log.Logger
+	Log           *common.Logger
 }
 
 type Manager struct {
-	config        ManagerConfig
+	cfg           ManagerConfig
 	PackedImage   *PackedImage
 	nextID        ID
 	packedTexture *common.Texture
@@ -41,8 +40,8 @@ type Manager struct {
 
 func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
 	mgr = &Manager{
-		PackedImage: NewPackedImage(cfg.TextureWidth, cfg.TextureHeight),
-		config:      cfg,
+		PackedImage: NewPackedImage(cfg.TextureWidth, cfg.TextureHeight, cfg.Log),
+		cfg:         cfg,
 		instances:   map[ID]*Instance{},
 		rendererData: rendererData{
 			Count:     0,
@@ -56,7 +55,7 @@ func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
 }
 
 func (m *Manager) CreateText() (id ID, err error) {
-	if uint32(m.rendererData.Count) >= m.config.MaxInstances {
+	if uint32(m.rendererData.Count) >= m.cfg.MaxInstances {
 		err = fmt.Errorf("Max text instances reached")
 		return
 	}
@@ -134,7 +133,8 @@ func (m *Manager) repackImage() (err error) {
 		newImage *PackedImage
 		instance *Instance
 	)
-	newImage = NewPackedImage(m.PackedImage.Width, m.PackedImage.Height)
+	m.cfg.Log.Info.Printf("Repacking image\n")
+	newImage = NewPackedImage(m.PackedImage.Width, m.PackedImage.Height, m.cfg.Log)
 	for _, instance = range m.instances {
 		if err = newImage.Copy(instance.Text, m.PackedImage); err != nil {
 			return
@@ -147,7 +147,7 @@ func (m *Manager) repackImage() (err error) {
 	if err = m.generateTexture(); err != nil {
 		return
 	}
-	m.config.Logger.Printf("Repacked image\n")
+	m.cfg.Log.Info.Printf("Done repacking\n")
 	return
 }
 

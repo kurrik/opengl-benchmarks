@@ -15,4 +15,4 @@ go get github.com/golang/freetype
 go get github.com/golang/freetype/truetype
 go get golang.org/x/image/math/fixed
 
-go run $GITROOT/src/uniform-texture-coords/*.go
+go run $GITROOT/src/uniform-texture-coords/*.go $@
