@@ -142,6 +142,7 @@ func (m *Manager) repackImage() (err error) {
 		if instance.tile, err = newImage.Tile(instance.Text); err != nil {
 			return
 		}
+		instance.dirty = true
 	}
 	m.PackedImage = newImage
 	if err = m.generateTexture(); err != nil {
