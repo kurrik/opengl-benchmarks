@@ -19,18 +19,31 @@ import (
 )
 
 type Sheet struct {
-	uniformData *Uniform
+	UniformData *Uniform
 	texture     *common.Texture
 	keys        map[string]int
 }
 
 func NewSheet() *Sheet {
 	return &Sheet{
-		uniformData: NewUniform(),
+		UniformData: NewUniform(),
 		keys:        map[string]int{},
 	}
 }
 
+func (s *Sheet) Delete() {
+	if s.texture != nil {
+		s.texture.Delete()
+	}
+}
+
+func (s *Sheet) SetTexture(texture *common.Texture) {
+	if s.texture != nil {
+		s.texture.Delete()
+	}
+	s.texture = texture
+}
+
 func (s *Sheet) AddTile(key string, tile Tile) {
-	s.keys[key] = s.uniformData.AppendTile(tile)
+	s.keys[key] = s.UniformData.AppendTile(tile)
 }

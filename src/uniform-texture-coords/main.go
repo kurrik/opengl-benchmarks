@@ -23,6 +23,7 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common/renderers"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
+	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"image/color"
 	"runtime"
 )
@@ -50,7 +51,7 @@ func main() {
 
 	var (
 		context   *common.Context
-		sprites   *spritesheet.Sprites
+		sprites   *tile.Sheet
 		camera    *common.Camera
 		framerate *renderers.Framerate
 		font      *text.FontFace
@@ -103,7 +104,7 @@ func main() {
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
 		inst.SetRotation(s.R)
 	}
-	fmt.Printf("Sheet: %v\n", sprites.Sheet)
+	fmt.Printf("Sheet: %v\n", sprites.UniformData)
 	for !context.ShouldClose() {
 		context.Events.Poll()
 		context.Clear()

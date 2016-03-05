@@ -16,7 +16,7 @@ package spritesheet
 
 import (
 	"encoding/json"
-	"github.com/go-gl/mathgl/mgl32"
+	"github.com/kurrik/opengl-benchmarks/common/tile"
 )
 
 type texturePackerFloatCoords struct {
@@ -53,10 +53,12 @@ type texturePackerJSONArray struct {
 	Meta   texturePackerMeta    `json:meta`
 }
 
-func (f texturePackerFrame) ToSpritesheetFrame(meta texturePackerMeta, pxPerUnit float32) *SpritesheetFrame {
+func (f texturePackerFrame) ToTile(meta texturePackerMeta, pxPerUnit float32) tile.Tile {
 	var (
-		sourceW          = float32(f.SpriteSourceSize.W)
-		sourceH          = float32(f.SpriteSourceSize.H)
+		//sourceW          = float32(f.SpriteSourceSize.W)
+		//sourceH          = float32(f.SpriteSourceSize.H)
+		//sourceX          = float32(f.SpriteSourceSize.X)
+		//sourceY          = float32(f.SpriteSourceSize.Y)
 		textureX         = float32(f.Frame.X)
 		textureY         = float32(f.Frame.Y)
 		textureW         = float32(f.Frame.W)
@@ -67,28 +69,41 @@ func (f texturePackerFrame) ToSpritesheetFrame(meta texturePackerMeta, pxPerUnit
 		texY             = textureY / textureOriginalH
 		texW             = textureW / textureOriginalW
 		texH             = textureH / textureOriginalH
-		ptW              = sourceW / pxPerUnit
-		ptH              = sourceH / pxPerUnit
+		//ptW              = sourceW / pxPerUnit
+		//ptH              = sourceH / pxPerUnit
 	)
-	return &SpritesheetFrame{
-		Size:          mgl32.Vec2{ptW, ptH},
-		TextureOffset: mgl32.Vec2{texX, texY},
-		TextureSize:   mgl32.Vec2{texW, texH},
-	}
+	return tile.NewTile(
+		texW,
+		texH,
+		texX,
+		texY,
+		textureW,
+		textureH,
+		textureX,
+		textureY,
+	)
+	/*
+		return &SpritesheetFrame{
+			Size:          mgl32.Vec2{ptW, ptH},
+			TextureOffset: mgl32.Vec2{texX, texY},
+			TextureSize:   mgl32.Vec2{texW, texH},
+		}
+	*/
 }
 
-func ParseTexturePackerJSONArrayString(contents string, pxPerUnit float32) (s *Spritesheet, err error) {
+func ParseTexturePackerJSONArrayString(contents string, pxPerUnit float32) (s *tile.Sheet, texturePath string, err error) {
 	var (
 		parsed texturePackerJSONArray
 	)
 	if err = json.Unmarshal([]byte(contents), &parsed); err != nil {
 		return
 	}
-	s = NewSpritesheet(parsed.Meta.Image)
+	texturePath = parsed.Meta.Image
+	s = tile.NewSheet()
 	for _, frame := range parsed.Frames {
-		s.AddFrame(
+		s.AddTile(
 			frame.Filename,
-			frame.ToSpritesheetFrame(parsed.Meta, pxPerUnit),
+			frame.ToTile(parsed.Meta, pxPerUnit),
 		)
 	}
 	return

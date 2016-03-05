@@ -16,6 +16,7 @@ package spritesheet
 
 import (
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"io/ioutil"
 	"path"
 )
@@ -25,31 +26,28 @@ type Sprites struct {
 	Texture *common.Texture
 }
 
-func NewSprites(jsonPath string, pxPerUnit float32) (sprites *Sprites, err error) {
+func NewSprites(jsonPath string, pxPerUnit float32) (sheet *tile.Sheet, err error) {
 	var (
 		data        []byte
 		dir         = path.Dir(jsonPath)
 		texture     *common.Texture
-		spritesheet *Spritesheet
+		texturePath string
 	)
 	if data, err = ioutil.ReadFile(jsonPath); err != nil {
 		return
 	}
-	if spritesheet, err = ParseTexturePackerJSONArrayString(
+	if sheet, texturePath, err = ParseTexturePackerJSONArrayString(
 		string(data),
 		pxPerUnit,
 	); err != nil {
 		return
 	}
 	if texture, err = common.LoadTexture(
-		path.Join(dir, spritesheet.GetTexturePath()),
+		path.Join(dir, texturePath),
 		common.SmoothingNearest,
 	); err != nil {
 		return
 	}
-	sprites = &Sprites{
-		Sheet:   spritesheet,
-		Texture: texture,
-	}
+	sheet.SetTexture(texture)
 	return
 }
