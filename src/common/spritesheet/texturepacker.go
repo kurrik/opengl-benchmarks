@@ -55,10 +55,6 @@ type texturePackerJSONArray struct {
 
 func (f texturePackerFrame) ToTile(meta texturePackerMeta, pxPerUnit float32) tile.Tile {
 	var (
-		//sourceW          = float32(f.SpriteSourceSize.W)
-		//sourceH          = float32(f.SpriteSourceSize.H)
-		//sourceX          = float32(f.SpriteSourceSize.X)
-		//sourceY          = float32(f.SpriteSourceSize.Y)
 		textureX         = float32(f.Frame.X)
 		textureY         = float32(f.Frame.Y)
 		textureW         = float32(f.Frame.W)
@@ -69,8 +65,6 @@ func (f texturePackerFrame) ToTile(meta texturePackerMeta, pxPerUnit float32) ti
 		texY             = textureY / textureOriginalH
 		texW             = textureW / textureOriginalW
 		texH             = textureH / textureOriginalH
-		//ptW              = sourceW / pxPerUnit
-		//ptH              = sourceH / pxPerUnit
 	)
 	return tile.NewTile(
 		texW,
@@ -82,13 +76,6 @@ func (f texturePackerFrame) ToTile(meta texturePackerMeta, pxPerUnit float32) ti
 		textureX,
 		textureY,
 	)
-	/*
-		return &SpritesheetFrame{
-			Size:          mgl32.Vec2{ptW, ptH},
-			TextureOffset: mgl32.Vec2{texX, texY},
-			TextureSize:   mgl32.Vec2{texW, texH},
-		}
-	*/
 }
 
 func ParseTexturePackerJSONArrayString(contents string, pxPerUnit float32) (s *tile.Sheet, texturePath string, err error) {
