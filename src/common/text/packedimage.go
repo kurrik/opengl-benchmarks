@@ -27,8 +27,7 @@ type PackedImage struct {
 	Height  int
 	img     draw.Image
 	shelves []*shelf
-	tiles   map[string]int
-	Data    *tile.Uniform
+	Sheet   *tile.Sheet
 }
 
 func NewPackedImage(w, h int) (i *PackedImage) {
@@ -37,8 +36,7 @@ func NewPackedImage(w, h int) (i *PackedImage) {
 		Height:  h,
 		img:     image.NewRGBA(image.Rect(0, 0, w, h)),
 		shelves: []*shelf{newShelf()},
-		Data:    tile.NewUniform(),
-		tiles:   map[string]int{},
+		Sheet:   tile.NewSheet(),
 	}
 }
 
@@ -51,10 +49,8 @@ func (i *PackedImage) Pack(key string, img image.Image) (err error) {
 }
 
 func (i *PackedImage) Copy(key string, src *PackedImage) (err error) {
-	var (
-		bounds image.Rectangle
-	)
-	if bounds, err = src.Bounds(key); err != nil {
+	var bounds image.Rectangle
+	if bounds, err = src.Sheet.TileBounds(key); err != nil {
 		return
 	}
 	return i.packRegion(key, src.img, bounds)
@@ -71,9 +67,8 @@ func (i *PackedImage) packRegion(key string, src image.Image, srcBounds image.Re
 		w         int             = srcBounds.Max.X - srcBounds.Min.X
 		h         int             = srcBounds.Max.Y - srcBounds.Min.Y
 		maxW      int             = texBounds.Max.X
-		exists    bool
 	)
-	if _, exists = i.tiles[key]; exists {
+	if i.Sheet.TileExists(key) {
 		// Don't need to pack since it's already in here
 		return
 	}
@@ -102,7 +97,7 @@ func (i *PackedImage) packRegion(key string, src image.Image, srcBounds image.Re
 		destPt   = image.Pt(x, y)
 		destRect = image.Rectangle{destPt, destPt.Add(image.Pt(w, h))}
 	)
-	i.tiles[key] = i.Data.AppendTile(tile.NewTile(
+	i.Sheet.AddTile(key, tile.NewTile(
 		float32(w)/float32(texBounds.Max.X),
 		float32(h)/float32(texBounds.Max.Y),
 		float32(x)/float32(texBounds.Max.X),
@@ -116,27 +111,5 @@ func (i *PackedImage) packRegion(key string, src image.Image, srcBounds image.Re
 		glog.Infof("packRegion(%v): dest %v src %v", key, destRect, srcBounds.Min)
 	}
 	draw.Draw(i.img, destRect, src, srcBounds.Min, draw.Src)
-	return
-}
-
-func (i *PackedImage) Bounds(key string) (out image.Rectangle, err error) {
-	var (
-		index int
-	)
-	if index, err = i.Tile(key); err != nil {
-		return
-	}
-	out, err = i.Data.TileBounds(index)
-	return
-}
-
-func (i *PackedImage) Tile(key string) (out int, err error) {
-	var (
-		ok bool
-	)
-	if out, ok = i.tiles[key]; !ok {
-		err = fmt.Errorf("Packed image did not contain key %v", key)
-		return
-	}
 	return
 }

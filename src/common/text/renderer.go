@@ -121,7 +121,7 @@ func (r *Renderer) Delete() {
 	r.ubo.Delete()
 }
 
-func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData *tile.Uniform) (err error) {
+func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData *tile.Sheet) (err error) {
 	var (
 		vboBytes = data.Count * int(r.stride)
 		uboBytes = textureData.TileBytes()

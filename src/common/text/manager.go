@@ -104,7 +104,7 @@ func (m *Manager) SetText(id ID, text string, font *FontFace) (err error) {
 	if instance, err = m.getInstance(id); err != nil {
 		return
 	}
-	if instance.tile, err = m.PackedImage.Tile(text); err != nil {
+	if instance.tile, err = m.PackedImage.Sheet.TileIndex(text); err != nil {
 		return
 	}
 	instance.dirty = true
@@ -141,7 +141,7 @@ func (m *Manager) repackImage() (err error) {
 		if err = newImage.Copy(instance.Text, m.PackedImage); err != nil {
 			return
 		}
-		if instance.tile, err = newImage.Tile(instance.Text); err != nil {
+		if instance.tile, err = newImage.Sheet.TileIndex(instance.Text); err != nil {
 			return
 		}
 		instance.dirty = true
@@ -212,5 +212,5 @@ func (m *Manager) Render(camera *common.Camera) {
 			instance.dirty = false
 		}
 	}
-	m.renderer.Render(camera, &m.rendererData, m.PackedImage.Data)
+	m.renderer.Render(camera, &m.rendererData, m.PackedImage.Sheet)
 }

@@ -104,7 +104,7 @@ func main() {
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
 		inst.SetRotation(s.R)
 	}
-	fmt.Printf("Sheet: %v\n", sprites.UniformData)
+	fmt.Printf("Sheet: %v\n", sprites.Tiles)
 	for !context.ShouldClose() {
 		context.Events.Poll()
 		context.Clear()

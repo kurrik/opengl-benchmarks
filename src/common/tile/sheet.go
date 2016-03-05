@@ -15,19 +15,36 @@
 package tile
 
 import (
+	"fmt"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"image"
+	"unsafe"
 )
 
 type Sheet struct {
-	UniformData *Uniform
-	texture     *common.Texture
-	keys        map[string]int
+	Tiles   []Tile
+	Count   int
+	texture *common.Texture
+	keys    map[string]int
 }
 
 func NewSheet() *Sheet {
 	return &Sheet{
-		UniformData: NewUniform(),
-		keys:        map[string]int{},
+		Tiles: []Tile{},
+		Count: 0,
+		keys:  map[string]int{},
+	}
+}
+
+func (s *Sheet) Bind() {
+	if s.texture != nil {
+		s.texture.Bind()
+	}
+}
+
+func (s *Sheet) Unbind() {
+	if s.texture != nil {
+		s.texture.Unbind()
 	}
 }
 
@@ -45,5 +62,37 @@ func (s *Sheet) SetTexture(texture *common.Texture) {
 }
 
 func (s *Sheet) AddTile(key string, tile Tile) {
-	s.keys[key] = s.UniformData.AppendTile(tile)
+	var index int
+	index = s.Count
+	s.Tiles = append(s.Tiles, tile)
+	s.keys[key] = index
+	s.Count++
+}
+
+func (s *Sheet) TileExists(key string) (exists bool) {
+	_, exists = s.keys[key]
+	return
+}
+
+func (s *Sheet) TileIndex(key string) (index int, err error) {
+	var exists bool
+	if index, exists = s.keys[key]; !exists {
+		err = fmt.Errorf("Invalid frame %v", index)
+		return
+	}
+	return
+}
+
+func (s *Sheet) TileBounds(key string) (out image.Rectangle, err error) {
+	var index int
+	if index, err = s.TileIndex(key); err != nil {
+		return
+	}
+	out = s.Tiles[index].ImageBounds()
+	return
+}
+
+func (s *Sheet) TileBytes() int {
+	var point Tile
+	return s.Count * int(unsafe.Sizeof(point))
 }
