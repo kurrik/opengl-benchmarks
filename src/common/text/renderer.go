@@ -120,16 +120,15 @@ func (r *Renderer) Delete() {
 	r.ubo.Delete()
 }
 
-func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData []float32) (err error) {
+func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData *common.TextureData) (err error) {
 	var (
 		vboBytes = data.Count * int(r.stride)
-		point    float32
-		uboBytes = len(textureData) * int(unsafe.Sizeof(point))
+		uboBytes = textureData.TileBytes()
 	)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
 	r.vbo.Upload(data.Instances, vboBytes)
-	r.ubo.Upload(textureData, uboBytes)
+	r.ubo.Upload(textureData.Tiles, uboBytes)
 	ptsPerInstance := 6
 	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(data.Count))
 	if e := gl.GetError(); e != 0 {

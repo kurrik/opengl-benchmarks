@@ -17,31 +17,28 @@ package text
 import (
 	"fmt"
 	"github.com/golang/glog"
+	"github.com/kurrik/opengl-benchmarks/common"
 	"image"
 	"image/draw"
 )
 
 type PackedImage struct {
-	Width     int
-	Height    int
-	img       draw.Image
-	shelves   []*shelf
-	locations map[string]int
-	tiles     map[string]int
-	count     int
-	Data      []float32
+	Width   int
+	Height  int
+	img     draw.Image
+	shelves []*shelf
+	tiles   map[string]int
+	Data    *common.TextureData
 }
 
 func NewPackedImage(w, h int) (i *PackedImage) {
 	return &PackedImage{
-		Width:     w,
-		Height:    h,
-		img:       image.NewRGBA(image.Rect(0, 0, w, h)),
-		shelves:   []*shelf{newShelf()},
-		locations: map[string]int{},
-		Data:      []float32{},
-		count:     0,
-		tiles:     map[string]int{},
+		Width:   w,
+		Height:  h,
+		img:     image.NewRGBA(image.Rect(0, 0, w, h)),
+		shelves: []*shelf{newShelf()},
+		Data:    common.NewTextureData(float32(w), float32(h)),
+		tiles:   map[string]int{},
 	}
 }
 
@@ -105,10 +102,7 @@ func (i *PackedImage) packRegion(key string, src image.Image, srcBounds image.Re
 		destPt   = image.Pt(x, y)
 		destRect = image.Rectangle{destPt, destPt.Add(image.Pt(w, h))}
 	)
-	i.locations[key] = len(i.Data)
-	i.tiles[key] = i.count
-	i.count += 1
-	i.Data = append(i.Data,
+	i.tiles[key] = i.Data.AppendTile(common.NewTileData(
 		float32(w)/float32(texBounds.Max.X),
 		float32(h)/float32(texBounds.Max.Y),
 		float32(x)/float32(texBounds.Max.X),
@@ -117,7 +111,7 @@ func (i *PackedImage) packRegion(key string, src image.Image, srcBounds image.Re
 		float32(h),
 		float32(destRect.Min.X),
 		float32(destRect.Min.Y),
-	)
+	))
 	if glog.V(2) {
 		glog.Infof("packRegion(%v): dest %v src %v", key, destRect, srcBounds.Min)
 	}
@@ -128,16 +122,11 @@ func (i *PackedImage) packRegion(key string, src image.Image, srcBounds image.Re
 func (i *PackedImage) Bounds(key string) (out image.Rectangle, err error) {
 	var (
 		index int
-		ok    bool
 	)
-	if index, ok = i.locations[key]; !ok {
-		err = fmt.Errorf("Packed image did not contain key %v", key)
+	if index, err = i.Tile(key); err != nil {
 		return
 	}
-	out = image.Rectangle{
-		image.Point{int(i.Data[index+6]), int(i.Data[index+7])},
-		image.Point{int(i.Data[index+6] + i.Data[index+4]), int(i.Data[index+7] + i.Data[index+5])},
-	}
+	out, err = i.Data.TileBounds(index)
 	return
 }
 
