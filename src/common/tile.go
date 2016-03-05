@@ -39,26 +39,26 @@ func (fd TileData) ImageBounds() image.Rectangle {
 	}
 }
 
-type TextureData struct {
-	Tiles  []TileData
-	Count  int
+type TileUniform struct {
+	Tiles []TileData
+	Count int
 }
 
-func NewTextureData() *TextureData {
-	return &TextureData{
-		Tiles:  []TileData{},
-		Count:  0,
+func NewTileUniform() *TileUniform {
+	return &TileUniform{
+		Tiles: []TileData{},
+		Count: 0,
 	}
 }
 
-func (td *TextureData) AppendTile(frameData TileData) (index int) {
+func (td *TileUniform) AppendTile(tile TileData) (index int) {
 	index = td.Count
 	td.Count++
-	td.Tiles = append(td.Tiles, frameData)
+	td.Tiles = append(td.Tiles, tile)
 	return
 }
 
-func (td *TextureData) TileBounds(index int) (out image.Rectangle, err error) {
+func (td *TileUniform) TileBounds(index int) (out image.Rectangle, err error) {
 	if index < 0 || index > td.Count {
 		err = fmt.Errorf("Invalid frame %v", index)
 		return
@@ -67,7 +67,7 @@ func (td *TextureData) TileBounds(index int) (out image.Rectangle, err error) {
 	return
 }
 
-func (td *TextureData) TileBytes() int {
+func (td *TileUniform) TileBytes() int {
 	var (
 		point TileData
 	)

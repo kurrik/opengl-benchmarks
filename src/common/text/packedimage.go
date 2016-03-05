@@ -28,7 +28,7 @@ type PackedImage struct {
 	img     draw.Image
 	shelves []*shelf
 	tiles   map[string]int
-	Data    *common.TextureData
+	Data    *common.TileUniform
 }
 
 func NewPackedImage(w, h int) (i *PackedImage) {
@@ -37,7 +37,7 @@ func NewPackedImage(w, h int) (i *PackedImage) {
 		Height:  h,
 		img:     image.NewRGBA(image.Rect(0, 0, w, h)),
 		shelves: []*shelf{newShelf()},
-		Data:    common.NewTextureData(),
+		Data:    common.NewTileUniform(),
 		tiles:   map[string]int{},
 	}
 }
