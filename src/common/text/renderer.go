@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"unsafe"
 )
 
@@ -120,7 +121,7 @@ func (r *Renderer) Delete() {
 	r.ubo.Delete()
 }
 
-func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData *common.TileUniform) (err error) {
+func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData *tile.Uniform) (err error) {
 	var (
 		vboBytes = data.Count * int(r.stride)
 		uboBytes = textureData.TileBytes()

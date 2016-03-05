@@ -17,7 +17,7 @@ package text
 import (
 	"fmt"
 	"github.com/golang/glog"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"image"
 	"image/draw"
 )
@@ -28,7 +28,7 @@ type PackedImage struct {
 	img     draw.Image
 	shelves []*shelf
 	tiles   map[string]int
-	Data    *common.TileUniform
+	Data    *tile.Uniform
 }
 
 func NewPackedImage(w, h int) (i *PackedImage) {
@@ -37,7 +37,7 @@ func NewPackedImage(w, h int) (i *PackedImage) {
 		Height:  h,
 		img:     image.NewRGBA(image.Rect(0, 0, w, h)),
 		shelves: []*shelf{newShelf()},
-		Data:    common.NewTileUniform(),
+		Data:    tile.NewUniform(),
 		tiles:   map[string]int{},
 	}
 }
@@ -102,7 +102,7 @@ func (i *PackedImage) packRegion(key string, src image.Image, srcBounds image.Re
 		destPt   = image.Pt(x, y)
 		destRect = image.Rectangle{destPt, destPt.Add(image.Pt(w, h))}
 	)
-	i.tiles[key] = i.Data.AppendTile(common.NewTileData(
+	i.tiles[key] = i.Data.AppendTile(tile.NewTile(
 		float32(w)/float32(texBounds.Max.X),
 		float32(h)/float32(texBounds.Max.Y),
 		float32(x)/float32(texBounds.Max.X),
