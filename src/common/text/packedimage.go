@@ -37,7 +37,7 @@ func NewPackedImage(w, h int) (i *PackedImage) {
 		Height:  h,
 		img:     image.NewRGBA(image.Rect(0, 0, w, h)),
 		shelves: []*shelf{newShelf()},
-		Data:    common.NewTextureData(float32(w), float32(h)),
+		Data:    common.NewTextureData(),
 		tiles:   map[string]int{},
 	}
 }

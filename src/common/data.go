@@ -40,16 +40,12 @@ func (fd TileData) ImageBounds() image.Rectangle {
 }
 
 type TextureData struct {
-	Width  float32
-	Height float32
 	Tiles  []TileData
 	Count  int
 }
 
-func NewTextureData(width, height float32) *TextureData {
+func NewTextureData() *TextureData {
 	return &TextureData{
-		Width:  width,
-		Height: height,
 		Tiles:  []TileData{},
 		Count:  0,
 	}
