@@ -16,16 +16,14 @@ package tile
 
 import (
 	"fmt"
-	"github.com/kurrik/opengl-benchmarks/common"
 	"image"
 	"unsafe"
 )
 
 type Sheet struct {
-	Tiles   []Tile
-	Count   int
-	texture *common.Texture
-	keys    map[string]int
+	Tiles []Tile
+	Count int
+	keys  map[string]int
 }
 
 func NewSheet() *Sheet {
@@ -34,32 +32,6 @@ func NewSheet() *Sheet {
 		Count: 0,
 		keys:  map[string]int{},
 	}
-}
-
-func (s *Sheet) Bind() {
-	if s.texture != nil {
-		s.texture.Bind()
-	}
-}
-
-func (s *Sheet) Unbind() {
-	if s.texture != nil {
-		s.texture.Unbind()
-	}
-}
-
-func (s *Sheet) Delete() {
-	if s.texture != nil {
-		s.texture.Delete()
-		s.texture = nil
-	}
-}
-
-func (s *Sheet) SetTexture(texture *common.Texture) {
-	if s.texture != nil {
-		s.texture.Delete()
-	}
-	s.texture = texture
 }
 
 func (s *Sheet) AddTile(key string, tile Tile) {
