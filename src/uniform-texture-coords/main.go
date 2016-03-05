@@ -29,10 +29,10 @@ import (
 )
 
 type Inst struct {
-	Text string
-	X    float32
-	Y    float32
-	R    float32
+	Key string
+	X   float32
+	Y   float32
+	R   float32
 }
 
 func init() {
@@ -51,7 +51,7 @@ func main() {
 
 	var (
 		context   *common.Context
-		sprites   *tile.Sheet
+		spriteMgr *spritesheet.Manager
 		camera    *common.Camera
 		framerate *renderers.Framerate
 		font      *text.FontFace
@@ -69,7 +69,11 @@ func main() {
 	if err = context.CreateWindow(WinWidth, WinHeight, WinTitle); err != nil {
 		panic(err)
 	}
-	if sprites, err = spritesheet.NewSprites("src/resources/spritesheet.json", 32); err != nil {
+	if spriteMgr, err = spritesheet.NewManager(spritesheet.ManagerConfig{
+		JsonPath:      "src/resources/spritesheet.json",
+		PixelsPerUnit: 32,
+		MaxInstances:  100,
+	}); err != nil {
 		panic(err)
 	}
 	if framerate, err = renderers.NewFramerateRenderer(); err != nil {
@@ -89,13 +93,13 @@ func main() {
 		panic(err)
 	}
 	for _, s := range []Inst{
-		Inst{Text: "This is text!", X: 0.05, Y: 0.05, R: 0},
-		Inst{Text: "More text!", X: 1, Y: 1, R: 15},
+		Inst{Key: "This is text!", X: 0.05, Y: 0.05, R: 0},
+		Inst{Key: "More text!", X: 1, Y: 1, R: 15},
 	} {
 		if id, err = textMgr.CreateInstance(); err != nil {
 			panic(err)
 		}
-		if err = textMgr.SetText(id, s.Text, font); err != nil {
+		if err = textMgr.SetText(id, s.Key, font); err != nil {
 			panic(err)
 		}
 		if inst, err = textMgr.GetInstance(id); err != nil {
@@ -104,10 +108,31 @@ func main() {
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
 		inst.SetRotation(s.R)
 	}
-	fmt.Printf("Sheet: %v\n", sprites.Tiles)
+
+	for _, s := range []Inst{
+		Inst{Key: "numbered_squares_01", X: -1, Y: -1, R: 0},
+		Inst{Key: "numbered_squares_02", X: -2, Y: -2, R: -15},
+	} {
+		if id, err = spriteMgr.CreateInstance(); err != nil {
+			panic(err)
+		}
+		if err = spriteMgr.SetFrame(id, s.Key); err != nil {
+			panic(err)
+		}
+		if inst, err = spriteMgr.GetInstance(id); err != nil {
+			panic(err)
+		}
+		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
+		inst.SetRotation(s.R)
+	}
+
+	//fmt.Printf("Sheet: %v\n", sprites.Tiles)
 	for !context.ShouldClose() {
 		context.Events.Poll()
 		context.Clear()
+		spriteMgr.Bind()
+		spriteMgr.Render(camera)
+		spriteMgr.Unbind()
 		framerate.Bind()
 		framerate.Render(camera)
 		framerate.Unbind()

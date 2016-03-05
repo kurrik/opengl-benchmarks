@@ -31,7 +31,7 @@ type Manager struct {
 	*tile.Manager
 	cfg           ManagerConfig
 	PackedImage   *PackedImage
-	packedTexture *common.Texture
+	texture *common.Texture
 }
 
 func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
@@ -83,10 +83,10 @@ func (m *Manager) SetText(id tile.InstanceID, text string, font *FontFace) (err 
 }
 
 func (m *Manager) generateTexture() (err error) {
-	if m.packedTexture != nil {
-		m.packedTexture.Delete()
+	if m.texture != nil {
+		m.texture.Delete()
 	}
-	if m.packedTexture, err = common.GetTexture(
+	if m.texture, err = common.GetTexture(
 		m.PackedImage.Image(),
 		common.SmoothingLinear,
 	); err != nil {
@@ -124,23 +124,23 @@ func (m *Manager) repackImage() (err error) {
 }
 
 func (m *Manager) Bind() {
-	if m.packedTexture != nil {
-		m.packedTexture.Bind()
+	if m.texture != nil {
+		m.texture.Bind()
 	}
 	m.Manager.Bind()
 }
 
 func (m *Manager) Unbind() {
-	if m.packedTexture != nil {
-		m.packedTexture.Unbind()
+	if m.texture != nil {
+		m.texture.Unbind()
 	}
 	m.Manager.Unbind()
 }
 
 func (m *Manager) Delete() {
-	if m.packedTexture != nil {
-		m.packedTexture.Delete()
-		m.packedTexture = nil
+	if m.texture != nil {
+		m.texture.Delete()
+		m.texture = nil
 	}
 	m.Manager.Delete()
 }
