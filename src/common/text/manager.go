@@ -21,7 +21,7 @@ import (
 	"image/draw"
 )
 
-type ManagerConfig struct {
+type Config struct {
 	MaxInstances  uint32
 	TextureWidth  int
 	TextureHeight int
@@ -29,16 +29,16 @@ type ManagerConfig struct {
 
 type Manager struct {
 	*tile.Manager
-	cfg           ManagerConfig
+	cfg           Config
 	PackedImage   *PackedImage
 	texture *common.Texture
 }
 
-func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
+func NewManager(cfg Config) (mgr *Manager, err error) {
 	var (
 		tileManager *tile.Manager
 	)
-	if tileManager, err = tile.NewManager(tile.ManagerConfig{
+	if tileManager, err = tile.NewManager(tile.Config{
 		MaxInstances: cfg.MaxInstances,
 	}); err != nil {
 		return

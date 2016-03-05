@@ -20,12 +20,12 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common"
 )
 
-type ManagerConfig struct {
+type Config struct {
 	MaxInstances uint32
 }
 
 type Manager struct {
-	cfg               ManagerConfig
+	cfg               Config
 	nextID            InstanceID
 	renderer          *Renderer
 	Instances         map[InstanceID]*TileInstance
@@ -33,7 +33,7 @@ type Manager struct {
 	count             int
 }
 
-func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
+func NewManager(cfg Config) (mgr *Manager, err error) {
 	mgr = &Manager{
 		cfg:               cfg,
 		Instances:         map[InstanceID]*TileInstance{},

@@ -69,7 +69,7 @@ func main() {
 	if err = context.CreateWindow(WinWidth, WinHeight, WinTitle); err != nil {
 		panic(err)
 	}
-	if spriteMgr, err = spritesheet.NewManager(spritesheet.ManagerConfig{
+	if spriteMgr, err = spritesheet.NewManager(spritesheet.Config{
 		JsonPath:      "src/resources/spritesheet.json",
 		PixelsPerUnit: 32,
 		MaxInstances:  100,
@@ -79,7 +79,7 @@ func main() {
 	if framerate, err = renderers.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}
-	if textMgr, err = text.NewManager(text.ManagerConfig{
+	if textMgr, err = text.NewManager(text.Config{
 		MaxInstances:  100,
 		TextureWidth:  512,
 		TextureHeight: 512,

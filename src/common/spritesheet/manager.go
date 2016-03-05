@@ -21,7 +21,7 @@ import (
 	"path"
 )
 
-type ManagerConfig struct {
+type Config struct {
 	JsonPath      string
 	PixelsPerUnit float32
 	MaxInstances  uint32
@@ -29,12 +29,12 @@ type ManagerConfig struct {
 
 type Manager struct {
 	*tile.Manager
-	cfg     ManagerConfig
+	cfg     Config
 	sheet   *tile.Sheet
 	texture *common.Texture
 }
 
-func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
+func NewManager(cfg Config) (mgr *Manager, err error) {
 	var (
 		data        []byte
 		dir         = path.Dir(cfg.JsonPath)
@@ -43,7 +43,7 @@ func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
 		tileManager *tile.Manager
 		sheet       *tile.Sheet
 	)
-	if tileManager, err = tile.NewManager(tile.ManagerConfig{
+	if tileManager, err = tile.NewManager(tile.Config{
 		MaxInstances: cfg.MaxInstances,
 	}); err != nil {
 		return
