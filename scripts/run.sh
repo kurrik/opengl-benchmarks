@@ -13,6 +13,7 @@ go get github.com/go-gl/glfw/v3.1/glfw
 go get github.com/go-gl/mathgl/mgl32
 go get github.com/golang/freetype
 go get github.com/golang/freetype/truetype
+go get github.com/golang/glog
 go get golang.org/x/image/math/fixed
 
-go run $GITROOT/src/uniform-texture-coords/*.go $@
+go run $GITROOT/src/uniform-texture-coords/*.go -logtostderr=true $@

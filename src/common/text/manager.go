@@ -17,6 +17,7 @@ package text
 import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"image/draw"
 )
@@ -25,7 +26,6 @@ type ManagerConfig struct {
 	MaxInstances  uint32
 	TextureWidth  int
 	TextureHeight int
-	Log           *common.Logger
 }
 
 type Manager struct {
@@ -40,7 +40,7 @@ type Manager struct {
 
 func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
 	mgr = &Manager{
-		PackedImage: NewPackedImage(cfg.TextureWidth, cfg.TextureHeight, cfg.Log),
+		PackedImage: NewPackedImage(cfg.TextureWidth, cfg.TextureHeight),
 		cfg:         cfg,
 		instances:   map[ID]*Instance{},
 		rendererData: rendererData{
@@ -133,8 +133,10 @@ func (m *Manager) repackImage() (err error) {
 		newImage *PackedImage
 		instance *Instance
 	)
-	m.cfg.Log.Info.Printf("Repacking image\n")
-	newImage = NewPackedImage(m.PackedImage.Width, m.PackedImage.Height, m.cfg.Log)
+	if glog.V(1) {
+		glog.Info("Repacking image")
+	}
+	newImage = NewPackedImage(m.PackedImage.Width, m.PackedImage.Height)
 	for _, instance = range m.instances {
 		if err = newImage.Copy(instance.Text, m.PackedImage); err != nil {
 			return
@@ -148,7 +150,9 @@ func (m *Manager) repackImage() (err error) {
 	if err = m.generateTexture(); err != nil {
 		return
 	}
-	m.cfg.Log.Info.Printf("Done repacking\n")
+	if glog.V(1) {
+		glog.Info("Done repacking")
+	}
 	return
 }
 

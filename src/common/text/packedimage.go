@@ -16,7 +16,7 @@ package text
 
 import (
 	"fmt"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/golang/glog"
 	"image"
 	"image/draw"
 )
@@ -30,10 +30,9 @@ type PackedImage struct {
 	tiles     map[string]int
 	count     int
 	Data      []float32
-	log       *common.Logger
 }
 
-func NewPackedImage(w, h int, log *common.Logger) (i *PackedImage) {
+func NewPackedImage(w, h int) (i *PackedImage) {
 	return &PackedImage{
 		Width:     w,
 		Height:    h,
@@ -43,7 +42,6 @@ func NewPackedImage(w, h int, log *common.Logger) (i *PackedImage) {
 		Data:      []float32{},
 		count:     0,
 		tiles:     map[string]int{},
-		log:       log,
 	}
 }
 
@@ -120,7 +118,9 @@ func (i *PackedImage) packRegion(key string, src image.Image, srcBounds image.Re
 		float32(destRect.Min.X),
 		float32(destRect.Min.Y),
 	)
-	i.log.Debug.Printf("packRegion(%v): draw.Draw(i.img, %v, src, %v, draw.Src)\n", key, destRect, srcBounds.Min)
+	if glog.V(2) {
+		glog.Infof("packRegion(%v): dest %v src %v", key, destRect, srcBounds.Min)
+	}
 	draw.Draw(i.img, destRect, src, srcBounds.Min, draw.Src)
 	return
 }

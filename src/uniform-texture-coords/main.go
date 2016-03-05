@@ -18,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/renderers"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
@@ -39,10 +40,6 @@ func init() {
 }
 
 func main() {
-	var (
-		flagLog string
-	)
-	flag.StringVar(&flagLog, "log", "error", "Logging level (one of 'debug', 'info' or 'error')")
 	flag.Parse()
 
 	const (
@@ -64,11 +61,7 @@ func main() {
 		id        text.ID
 		inst      *text.Instance
 		rot       int = 0
-		logger    *common.Logger
 	)
-	if logger, err = common.NewLogger(flagLog); err != nil {
-		panic(err)
-	}
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
 	}
@@ -85,7 +78,6 @@ func main() {
 		MaxInstances:  100,
 		TextureWidth:  512,
 		TextureHeight: 512,
-		Log:           logger,
 	}); err != nil {
 		panic(err)
 	}
@@ -134,4 +126,5 @@ func main() {
 		panic(err)
 	}
 	textMgr.Delete()
+	glog.Flush()
 }
