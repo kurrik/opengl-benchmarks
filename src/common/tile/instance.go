@@ -20,25 +20,21 @@ import (
 
 type InstanceID int32
 
-type Instance interface {
-	IsDirty() bool
-	SetDirty(dirty bool)
-}
-
 type TileInstance struct {
 	renderIndex int
-	tile        int
+	Tile        int
 	position    mgl32.Vec3
 	rotation    float32
-	dirty       bool
+	Dirty       bool
+	Key         string
 }
 
 func (i *TileInstance) SetPosition(p mgl32.Vec3) {
 	i.position = p
-	i.dirty = true
+	i.Dirty = true
 }
 
 func (i *TileInstance) SetRotation(r float32) {
 	i.rotation = r
-	i.dirty = true
+	i.Dirty = true
 }

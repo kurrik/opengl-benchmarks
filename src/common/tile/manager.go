@@ -28,7 +28,7 @@ type Manager struct {
 	cfg               ManagerConfig
 	nextID            InstanceID
 	renderer          *Renderer
-	instances         map[InstanceID]*TileInstance
+	Instances         map[InstanceID]*TileInstance
 	rendererInstances []rInstance
 	count             int
 }
@@ -36,7 +36,7 @@ type Manager struct {
 func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
 	mgr = &Manager{
 		cfg:               cfg,
-		instances:         map[InstanceID]*TileInstance{},
+		Instances:         map[InstanceID]*TileInstance{},
 		rendererInstances: make([]rInstance, cfg.MaxInstances),
 		count:             0,
 	}
@@ -48,16 +48,16 @@ func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
 
 func (m *Manager) CreateInstance() (id InstanceID, err error) {
 	if uint32(m.count) >= m.cfg.MaxInstances {
-		err = fmt.Errorf("Max text instances reached")
+		err = fmt.Errorf("Max instances reached")
 		return
 	}
 	id = m.nextID
-	m.instances[id] = &TileInstance{
+	m.Instances[id] = &TileInstance{
 		renderIndex: m.count,
-		tile:        0,
 		position:    mgl32.Vec3{0, 0, 0},
 		rotation:    0,
-		dirty:       true,
+		Tile:        0,
+		Dirty:       true,
 	}
 	m.nextID += 1
 	m.count += 1
@@ -68,7 +68,7 @@ func (m *Manager) GetInstance(id InstanceID) (inst *TileInstance, err error) {
 	var (
 		exists bool
 	)
-	if inst, exists = m.instances[id]; !exists {
+	if inst, exists = m.Instances[id]; !exists {
 		err = fmt.Errorf("Invalid text instance ID: %v", id)
 		return
 	}
@@ -100,10 +100,10 @@ func (m *Manager) Render(camera *common.Camera, sheet *Sheet) {
 		1.0/camera.PxPerUnit.Y(),
 		1.0,
 	)
-	for _, inst = range m.instances {
-		if inst.dirty {
+	for _, inst = range m.Instances {
+		if inst.Dirty {
 			rinst = &m.rendererInstances[inst.renderIndex]
-			rinst.tile = float32(inst.tile)
+			rinst.tile = float32(inst.Tile)
 			rot = mgl32.HomogRotate3DZ(mgl32.DegToRad(inst.rotation))
 			trans = mgl32.Translate3D(
 				inst.position.X(),
@@ -111,7 +111,7 @@ func (m *Manager) Render(camera *common.Camera, sheet *Sheet) {
 				inst.position.Z(),
 			)
 			rinst.model = trans.Mul4(rot).Mul4(scale)
-			inst.dirty = false
+			inst.Dirty = false
 		}
 	}
 	m.renderer.Render(camera, m.count, m.rendererInstances, sheet)

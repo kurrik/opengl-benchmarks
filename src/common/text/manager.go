@@ -15,10 +15,9 @@
 package text
 
 import (
-	"fmt"
-	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"image/draw"
 )
 
@@ -29,65 +28,33 @@ type ManagerConfig struct {
 }
 
 type Manager struct {
+	*tile.Manager
 	cfg           ManagerConfig
 	PackedImage   *PackedImage
-	nextID        ID
 	packedTexture *common.Texture
-	renderer      *Renderer
-	instances     map[ID]*Instance
-	rendererData  rendererData
 }
 
 func NewManager(cfg ManagerConfig) (mgr *Manager, err error) {
+	var (
+		tileManager *tile.Manager
+	)
+	if tileManager, err = tile.NewManager(tile.ManagerConfig{
+		MaxInstances: cfg.MaxInstances,
+	}); err != nil {
+		return
+	}
 	mgr = &Manager{
+		Manager:     tileManager,
 		PackedImage: NewPackedImage(cfg.TextureWidth, cfg.TextureHeight),
 		cfg:         cfg,
-		instances:   map[ID]*Instance{},
-		rendererData: rendererData{
-			Count:     0,
-			Instances: make([]rendererInstance, cfg.MaxInstances),
-		},
-	}
-	if mgr.renderer, err = NewRenderer(); err != nil {
-		return
 	}
 	return
 }
 
-func (m *Manager) CreateText() (id ID, err error) {
-	if uint32(m.rendererData.Count) >= m.cfg.MaxInstances {
-		err = fmt.Errorf("Max text instances reached")
-		return
-	}
-	id = m.nextID
-	m.instances[id] = &Instance{
-		renderIndex: m.rendererData.Count,
-		tile:        0,
-		position:    mgl32.Vec3{0, 0, 0},
-		rotation:    0,
-		dirty:       true,
-		Text:        "",
-	}
-	m.nextID += 1
-	m.rendererData.Count += 1
-	return
-}
-
-func (m *Manager) getInstance(id ID) (instance *Instance, err error) {
-	var (
-		exists bool
-	)
-	if instance, exists = m.instances[id]; !exists {
-		err = fmt.Errorf("Invalid text instance ID: %v", id)
-		return
-	}
-	return
-}
-
-func (m *Manager) SetText(id ID, text string, font *FontFace) (err error) {
+func (m *Manager) SetText(id tile.InstanceID, text string, font *FontFace) (err error) {
 	var (
 		img      draw.Image
-		instance *Instance
+		instance *tile.TileInstance
 	)
 	if img, err = font.GetImage(text); err != nil {
 		return
@@ -101,14 +68,14 @@ func (m *Manager) SetText(id ID, text string, font *FontFace) (err error) {
 			return
 		}
 	}
-	if instance, err = m.getInstance(id); err != nil {
+	if instance, err = m.GetInstance(id); err != nil {
 		return
 	}
-	if instance.tile, err = m.PackedImage.Sheet.TileIndex(text); err != nil {
+	if instance.Tile, err = m.PackedImage.Sheet.TileIndex(text); err != nil {
 		return
 	}
-	instance.dirty = true
-	instance.Text = text
+	instance.Dirty = true
+	instance.Key = text
 	if err = m.generateTexture(); err != nil {
 		return
 	}
@@ -131,20 +98,20 @@ func (m *Manager) generateTexture() (err error) {
 func (m *Manager) repackImage() (err error) {
 	var (
 		newImage *PackedImage
-		instance *Instance
+		instance *tile.TileInstance
 	)
 	if glog.V(1) {
 		glog.Info("Repacking image")
 	}
 	newImage = NewPackedImage(m.PackedImage.Width, m.PackedImage.Height)
-	for _, instance = range m.instances {
-		if err = newImage.Copy(instance.Text, m.PackedImage); err != nil {
+	for _, instance = range m.Instances {
+		if err = newImage.Copy(instance.Key, m.PackedImage); err != nil {
 			return
 		}
-		if instance.tile, err = newImage.Sheet.TileIndex(instance.Text); err != nil {
+		if instance.Tile, err = newImage.Sheet.TileIndex(instance.Key); err != nil {
 			return
 		}
-		instance.dirty = true
+		instance.Dirty = true
 	}
 	m.PackedImage = newImage
 	if err = m.generateTexture(); err != nil {
@@ -156,25 +123,18 @@ func (m *Manager) repackImage() (err error) {
 	return
 }
 
-func (m *Manager) GetInstance(id ID) (instance *Instance, err error) {
-	if instance, err = m.getInstance(id); err != nil {
-		return
-	}
-	return
-}
-
 func (m *Manager) Bind() {
 	if m.packedTexture != nil {
 		m.packedTexture.Bind()
 	}
-	m.renderer.Bind()
+	m.Manager.Bind()
 }
 
 func (m *Manager) Unbind() {
 	if m.packedTexture != nil {
 		m.packedTexture.Unbind()
 	}
-	m.renderer.Unbind()
+	m.Manager.Unbind()
 }
 
 func (m *Manager) Delete() {
@@ -182,35 +142,9 @@ func (m *Manager) Delete() {
 		m.packedTexture.Delete()
 		m.packedTexture = nil
 	}
-	m.renderer.Delete()
+	m.Manager.Delete()
 }
 
 func (m *Manager) Render(camera *common.Camera) {
-	var (
-		instance  *Instance
-		rInstance *rendererInstance
-		scale     mgl32.Mat4
-		rot       mgl32.Mat4
-		trans     mgl32.Mat4
-	)
-	scale = mgl32.Scale3D(
-		1.0/camera.PxPerUnit.X(),
-		1.0/camera.PxPerUnit.Y(),
-		1.0,
-	)
-	for _, instance = range m.instances {
-		if instance.dirty {
-			rInstance = &m.rendererData.Instances[instance.renderIndex]
-			rInstance.tile = float32(instance.tile)
-			rot = mgl32.HomogRotate3DZ(mgl32.DegToRad(instance.rotation))
-			trans = mgl32.Translate3D(
-				instance.position.X(),
-				instance.position.Y(),
-				instance.position.Z(),
-			)
-			rInstance.model = trans.Mul4(rot).Mul4(scale)
-			instance.dirty = false
-		}
-	}
-	m.renderer.Render(camera, &m.rendererData, m.PackedImage.Sheet)
+	m.Manager.Render(camera, m.PackedImage.Sheet)
 }

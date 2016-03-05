@@ -59,8 +59,8 @@ func main() {
 		bg        = color.RGBA{0, 0, 0, 255}
 		textMgr   *text.Manager
 		err       error
-		id        text.ID
-		inst      *text.Instance
+		id        tile.InstanceID
+		inst      *tile.TileInstance
 		rot       int = 0
 	)
 	if context, err = common.NewContext(); err != nil {
@@ -92,7 +92,7 @@ func main() {
 		Inst{Text: "This is text!", X: 0.05, Y: 0.05, R: 0},
 		Inst{Text: "More text!", X: 1, Y: 1, R: 15},
 	} {
-		if id, err = textMgr.CreateText(); err != nil {
+		if id, err = textMgr.CreateInstance(); err != nil {
 			panic(err)
 		}
 		if err = textMgr.SetText(id, s.Text, font); err != nil {
