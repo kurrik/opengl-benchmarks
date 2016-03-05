@@ -73,3 +73,20 @@ func (td *TileUniform) TileBytes() int {
 	)
 	return td.Count * int(unsafe.Sizeof(point))
 }
+
+type TileSheet struct {
+	uniformData *TileUniform
+	texture     *Texture
+	keys        map[string]int
+}
+
+func NewTileSheet() *TileSheet {
+	return &TileSheet{
+		uniformData: NewTileUniform(),
+		keys:        map[string]int{},
+	}
+}
+
+func (ts *TileSheet) AddTile(key string, tile TileData) {
+	s.keys[key] = ts.uniformData.AppendTile(tile)
+}
