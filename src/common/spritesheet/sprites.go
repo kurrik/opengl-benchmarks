@@ -21,11 +21,6 @@ import (
 	"path"
 )
 
-type Sprites struct {
-	Sheet   *Spritesheet
-	Texture *common.Texture
-}
-
 func NewSprites(jsonPath string, pxPerUnit float32) (sheet *tile.Sheet, err error) {
 	var (
 		data        []byte
