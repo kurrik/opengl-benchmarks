@@ -12,39 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package text
+package tile
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type ID int32
+type InstanceID int32
 
-type Instance struct {
+type Instance interface {
+	IsDirty() bool
+	SetDirty(dirty bool)
+}
+
+type TileInstance struct {
 	renderIndex int
 	tile        int
 	position    mgl32.Vec3
 	rotation    float32
 	dirty       bool
-	Text        string
 }
 
-func (i *Instance) SetPosition(p mgl32.Vec3) {
+func (i *TileInstance) SetPosition(p mgl32.Vec3) {
 	i.position = p
 	i.dirty = true
 }
 
-func (i *Instance) SetRotation(r float32) {
+func (i *TileInstance) SetRotation(r float32) {
 	i.rotation = r
 	i.dirty = true
-}
-
-type rendererInstance struct {
-	model mgl32.Mat4
-	tile  float32
-}
-
-type rendererData struct {
-	Count     int
-	Instances []rendererInstance
 }

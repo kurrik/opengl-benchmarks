@@ -130,11 +130,14 @@ func (p *Program) buildProgram(vsrc string, fsrc string) (err error) {
 	var (
 		vertex   uint32
 		fragment uint32
+		glsrc    string
 	)
-	if vertex, err = p.compileShader(gl.VERTEX_SHADER, vsrc); err != nil {
+	glsrc = fmt.Sprintf("%v\x00", vsrc)
+	if vertex, err = p.compileShader(gl.VERTEX_SHADER, glsrc); err != nil {
 		return
 	}
-	if fragment, err = p.compileShader(gl.FRAGMENT_SHADER, fsrc); err != nil {
+	glsrc = fmt.Sprintf("%v\x00", fsrc)
+	if fragment, err = p.compileShader(gl.FRAGMENT_SHADER, glsrc); err != nil {
 		return
 	}
 	p.program, err = p.linkProgram(vertex, fragment)

@@ -21,6 +21,16 @@ import (
 	"path"
 )
 
+type ManagerConfig struct {
+	JsonPath      string
+	PixelsPerUnit float32
+}
+
+type Manager struct {
+	cfg   ManagerConfig
+	sheet *tile.Sheet
+}
+
 func NewSprites(jsonPath string, pxPerUnit float32) (sheet *tile.Sheet, err error) {
 	var (
 		data        []byte

@@ -51,6 +51,7 @@ func (s *Sheet) Unbind() {
 func (s *Sheet) Delete() {
 	if s.texture != nil {
 		s.texture.Delete()
+		s.texture = nil
 	}
 }
 

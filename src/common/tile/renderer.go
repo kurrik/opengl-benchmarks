@@ -12,26 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package text
+package tile
 
 import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"unsafe"
 )
 
-const TEXT_FRAGMENT = `#version 150
+type rInstance struct {
+	model mgl32.Mat4
+	tile  float32
+}
+
+const TILE_FRAGMENT = `#version 150
+
 precision mediump float;
+
 in vec2 v_TexturePosition;
 uniform sampler2D u_Texture;
 out vec4 v_FragData;
+
 void main() {
   v_FragData = texture(u_Texture, v_TexturePosition);
 }`
 
-const TEXT_VERTEX = `#version 150
+const TILE_VERTEX = `#version 150
 
 #define MAX_TILES 1024
 
@@ -67,6 +75,7 @@ in mat4 m_Model;
 uniform mat4 m_View;
 uniform mat4 m_Projection;
 out vec2 v_TexturePosition;
+
 void main() {
   Tile t_Tile = Tiles[int(f_Tile)];
   mat4 m_ModelView = m_View * m_Model;
@@ -78,7 +87,6 @@ void main() {
 type Renderer struct {
 	shader *common.Program
 	stride uintptr
-	data   *rendererData
 	ubo    *common.UniformBuffer
 	vbo    *common.ArrayBuffer
 	uView  *common.Uniform
@@ -89,11 +97,11 @@ func NewRenderer() (r *Renderer, err error) {
 	r = &Renderer{
 		shader: common.NewProgram(),
 	}
-	if err = r.shader.Load(TEXT_VERTEX, TEXT_FRAGMENT); err != nil {
+	if err = r.shader.Load(TILE_VERTEX, TILE_FRAGMENT); err != nil {
 		return
 	}
 	r.shader.Bind()
-	var point rendererInstance
+	var point rInstance
 	r.stride = unsafe.Sizeof(point)
 	r.vbo = common.NewArrayBuffer(r.shader.ID(), r.stride)
 	r.vbo.Float("f_Tile", unsafe.Offsetof(point.tile), 1)
@@ -121,17 +129,17 @@ func (r *Renderer) Delete() {
 	r.ubo.Delete()
 }
 
-func (r *Renderer) Render(camera *common.Camera, data *rendererData, textureData *tile.Sheet) (err error) {
+func (r *Renderer) Render(camera *common.Camera, count int, instances []rInstance, sheet *Sheet) (err error) {
 	var (
-		vboBytes = data.Count * int(r.stride)
-		uboBytes = textureData.TileBytes()
+		vboBytes = count * int(r.stride)
+		uboBytes = sheet.TileBytes()
 	)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	r.vbo.Upload(data.Instances, vboBytes)
-	r.ubo.Upload(textureData.Tiles, uboBytes)
+	r.vbo.Upload(instances, vboBytes)
+	r.ubo.Upload(sheet.Tiles, uboBytes)
 	ptsPerInstance := 6
-	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(data.Count))
+	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(count))
 	if e := gl.GetError(); e != 0 {
 		err = fmt.Errorf("ERROR: OpenGL error %X", e)
 	}
