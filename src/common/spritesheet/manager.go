@@ -112,3 +112,13 @@ func (m *Manager) Delete() {
 func (m *Manager) Render(camera *common.Camera) {
 	m.Manager.Render(camera, m.sheet)
 }
+
+// TODO: Refactor so that sheet can be shared between multiple renderers / managers.
+func (m *Manager) GetSheet() *tile.Sheet {
+	return m.sheet
+}
+
+// TODO: Refactor so that texture can be shared between multiple renderers / managers.
+func (m *Manager) GetTexture() *common.Texture {
+	return m.texture
+}

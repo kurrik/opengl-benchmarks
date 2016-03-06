@@ -20,6 +20,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/batch"
 	"github.com/kurrik/opengl-benchmarks/common/renderers"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
@@ -50,18 +51,19 @@ func main() {
 	)
 
 	var (
-		context   *common.Context
-		spriteMgr *spritesheet.Manager
-		camera    *common.Camera
-		framerate *renderers.Framerate
-		font      *text.FontFace
-		fg        = color.RGBA{255, 255, 255, 255}
-		bg        = color.RGBA{0, 0, 0, 255}
-		textMgr   *text.Manager
-		err       error
-		id        tile.InstanceID
-		inst      *tile.TileInstance
-		rot       int = 0
+		context       *common.Context
+		spriteMgr     *spritesheet.Manager
+		camera        *common.Camera
+		framerate     *renderers.Framerate
+		font          *text.FontFace
+		fg            = color.RGBA{255, 255, 255, 255}
+		bg            = color.RGBA{0, 0, 0, 255}
+		textMgr       *text.Manager
+		err           error
+		id            tile.InstanceID
+		inst          *tile.TileInstance
+		rot           int = 0
+		batchRenderer *batch.Renderer
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -126,19 +128,32 @@ func main() {
 		inst.SetRotation(s.R)
 	}
 
+	if batchRenderer, err = batch.NewRenderer(); err != nil {
+		panic(err)
+	}
+
 	//fmt.Printf("Sheet: %v\n", sprites.Tiles)
 	for !context.ShouldClose() {
 		context.Events.Poll()
 		context.Clear()
+
 		spriteMgr.Bind()
 		spriteMgr.Render(camera)
 		spriteMgr.Unbind()
+
 		framerate.Bind()
 		framerate.Render(camera)
 		framerate.Unbind()
+
 		textMgr.Bind()
 		textMgr.Render(camera)
 		textMgr.Unbind()
+
+		batchRenderer.Bind()
+		spriteMgr.GetTexture().Bind()
+		batchRenderer.Render(camera, spriteMgr.GetSheet())
+		batchRenderer.Unbind()
+
 		context.SwapBuffers()
 
 		if err = textMgr.SetText(id, fmt.Sprintf("Rotation %v", rot%100), font); err != nil {

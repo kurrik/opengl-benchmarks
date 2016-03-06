@@ -121,6 +121,10 @@ func (b *ArrayBuffer) Vec2(name string, offset uintptr, divisor uint32) {
 	b.VertexAttrib(name, 2, gl.FLOAT, offset, divisor)
 }
 
+func (b *ArrayBuffer) Vec3(name string, offset uintptr, divisor uint32) {
+	b.VertexAttrib(name, 3, gl.FLOAT, offset, divisor)
+}
+
 func (b *ArrayBuffer) Mat4(name string, offset uintptr, divisor uint32) {
 	var (
 		float    float32

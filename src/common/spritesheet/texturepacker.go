@@ -64,7 +64,7 @@ func (f texturePackerFrame) ToTile(meta texturePackerMeta, pxPerUnit float32) ti
 		texX             = textureX / textureOriginalW
 		texW             = textureW / textureOriginalW
 		texH             = textureH / textureOriginalH
-		invTexY          = 1.0 - float32(f.Frame.Y+f.Frame.H)/textureOriginalH
+		invTexY          = 1.0 - float32(f.Frame.Y+f.Frame.H-1)/textureOriginalH
 	)
 	return tile.NewTile(
 		texW,
