@@ -145,7 +145,7 @@ func main() {
 	textMapping.Set('A', "numbered_squares_04")
 	textMapping.Set('B', "numbered_squares_05")
 	textLoader = batch.NewTextLoader(textMapping)
-	if batchData, err = textLoader.Load(BATCH); err != nil {
+	if batchData, err = textLoader.Load(batchRenderer, BATCH); err != nil {
 		panic(err)
 	}
 

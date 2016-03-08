@@ -16,24 +16,53 @@ package batch
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/kurrik/opengl-benchmarks/common"
+	"unsafe"
 )
 
 type batchPoint struct {
 	Position mgl32.Vec3
 	Texture  mgl32.Vec2
-	Tile float32
+	Tile     float32
 }
 
 type Batch struct {
 	Points []batchPoint
 	Model  mgl32.Mat4
 	Dirty  bool
+	vbo    *common.ArrayBuffer
+	stride uintptr
 }
 
-func NewBatch(capacity int) *Batch {
-	return &Batch{
+func newBatch(shaderID uint32, posName, texName, tileName string, capacity int) (out *Batch) {
+	var (
+		point  batchPoint
+		stride uintptr = unsafe.Sizeof(point)
+	)
+	out = &Batch{
 		Points: make([]batchPoint, 0, capacity),
 		Model:  mgl32.Ident4(),
 		Dirty:  true,
+		stride: stride,
+		vbo:    common.NewArrayBuffer(shaderID, stride),
+	}
+	out.vbo.Vec3(posName, unsafe.Offsetof(point.Position), 0)
+	out.vbo.Vec2(texName, unsafe.Offsetof(point.Texture), 0)
+	out.vbo.Float(tileName, unsafe.Offsetof(point.Tile), 0)
+	return
+}
+
+func (b *Batch) Bind() {
+	b.vbo.Bind()
+}
+
+func (b *Batch) Delete() {
+	b.vbo.Delete()
+}
+
+func (b *Batch) Upload() {
+	if b.Dirty {
+		b.vbo.Upload(b.Points, len(b.Points)*int(b.stride))
+		b.Dirty = false
 	}
 }

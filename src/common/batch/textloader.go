@@ -104,7 +104,7 @@ func (l *TextLoader) addTile(x, y float32, index int, batch *Batch) {
 	}...)
 }
 
-func (l *TextLoader) Load(grid string) (out *Batch, err error) {
+func (l *TextLoader) Load(renderer *Renderer, grid string) (out *Batch, err error) {
 	var (
 		lines []string
 		line  string
@@ -117,7 +117,7 @@ func (l *TextLoader) Load(grid string) (out *Batch, err error) {
 		err = fmt.Errorf("No lines in input data")
 		return
 	}
-	out = NewBatch(len(lines) * len(lines[0]) * 6)
+	out = renderer.NewBatch(len(lines) * len(lines[0]) * 6)
 	for y, line = range lines {
 		for x, char = range line {
 			l.addTile(float32(x), float32(y), l.mapping.Get(char), out)

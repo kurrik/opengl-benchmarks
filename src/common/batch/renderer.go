@@ -20,7 +20,6 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
-	"unsafe"
 )
 
 type rInstance struct {
@@ -78,7 +77,6 @@ type Renderer struct {
 	shader *common.Program
 	stride uintptr
 	ubo    *common.UniformBuffer
-	vbo    *common.ArrayBuffer
 	uView  *common.Uniform
 	uProj  *common.Uniform
 	uModel *common.Uniform
@@ -92,12 +90,6 @@ func NewRenderer() (r *Renderer, err error) {
 		return
 	}
 	r.shader.Bind()
-	var point batchPoint
-	r.stride = unsafe.Sizeof(point)
-	r.vbo = common.NewArrayBuffer(r.shader.ID(), r.stride)
-	r.vbo.Vec3("v_Position", unsafe.Offsetof(point.Position), 0)
-	r.vbo.Vec2("v_Texture", unsafe.Offsetof(point.Texture), 0)
-	r.vbo.Float("f_Tile", unsafe.Offsetof(point.Tile), 0)
 	r.ubo = common.NewUniformBuffer(r.shader.ID())
 	r.ubo.BlockBinding("TextureData", 1)
 	r.uView = r.shader.Uniform("m_View")
@@ -108,8 +100,11 @@ func NewRenderer() (r *Renderer, err error) {
 
 func (r *Renderer) Bind() {
 	r.shader.Bind()
-	r.vbo.Bind()
 	r.ubo.Bind()
+}
+
+func (r *Renderer) NewBatch(capacity int) *Batch {
+	return newBatch(r.shader.ID(), "v_Position", "v_Texture", "f_Tile", capacity)
 }
 
 func (r *Renderer) Unbind() {
@@ -118,7 +113,6 @@ func (r *Renderer) Unbind() {
 
 func (r *Renderer) Delete() {
 	r.shader.Delete()
-	r.vbo.Delete()
 	r.ubo.Delete()
 }
 
@@ -126,13 +120,8 @@ func (r *Renderer) Render(camera *common.Camera, sheet *tile.Sheet, batch *Batch
 	r.uModel.Mat4(batch.Model)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	if batch.Dirty {
-		// TODO: This is a bad idea since you can pass multiple batches
-		// in but only one VBO is used.  VBO should be scoped to
-		// the batch object.
-		r.vbo.Upload(batch.Points, len(batch.Points)*int(r.stride))
-		batch.Dirty = false
-	}
+	batch.Bind()
+	batch.Upload()
 	r.ubo.Upload(sheet.Tiles, sheet.Bytes())
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(batch.Points)))
 	if e := gl.GetError(); e != 0 {
