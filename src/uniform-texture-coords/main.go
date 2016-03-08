@@ -142,7 +142,7 @@ func main() {
 	if textMapping, err = batch.NewTextMapping(spriteMgr.GetSheet(), "numbered_squares_03"); err != nil {
 		panic(err)
 	}
-	textMapping.Set('A', "numbered_squares_04")
+	textMapping.Set('A', "numbered_squares_01")
 	textMapping.Set('B', "numbered_squares_05")
 	textLoader = batch.NewTextLoader(textMapping)
 	if batchData, err = textLoader.Load(batchRenderer, BATCH); err != nil {

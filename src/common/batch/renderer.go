@@ -67,9 +67,9 @@ out vec2 v_TextureDim;
 
 void main() {
   Tile t_Tile = Tiles[int(f_Tile)];
-  v_TexturePos = v_Texture;
   v_TextureMin = t_Tile.texture.zw;
   v_TextureDim = t_Tile.texture.xy;
+  v_TexturePos = v_Texture * v_TextureDim;
   gl_Position = m_Projection * m_View * m_Model * vec4(v_Position, 1.0);
 }`
 
