@@ -29,6 +29,11 @@ import (
 	"runtime"
 )
 
+const BATCH = `
+AAA
+BBB
+`
+
 type Inst struct {
 	Key string
 	X   float32
@@ -64,6 +69,9 @@ func main() {
 		inst          *tile.TileInstance
 		rot           int = 0
 		batchRenderer *batch.Renderer
+		textMapping   *batch.TextMapping
+		textLoader    *batch.TextLoader
+		batchData     *batch.Batch
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -131,11 +139,25 @@ func main() {
 	if batchRenderer, err = batch.NewRenderer(); err != nil {
 		panic(err)
 	}
+	if textMapping, err = batch.NewTextMapping(spriteMgr.GetSheet(), "numbered_squares_03"); err != nil {
+		panic(err)
+	}
+	textMapping.Set('A', "numbered_squares_04")
+	textMapping.Set('B', "numbered_squares_05")
+	textLoader = batch.NewTextLoader(textMapping)
+	if batchData, err = textLoader.Load(BATCH); err != nil {
+		panic(err)
+	}
 
 	//fmt.Printf("Sheet: %v\n", sprites.Tiles)
 	for !context.ShouldClose() {
 		context.Events.Poll()
 		context.Clear()
+
+		batchRenderer.Bind()
+		spriteMgr.GetTexture().Bind()
+		batchRenderer.Render(camera, spriteMgr.GetSheet(), batchData)
+		batchRenderer.Unbind()
 
 		spriteMgr.Bind()
 		spriteMgr.Render(camera)
@@ -148,11 +170,6 @@ func main() {
 		textMgr.Bind()
 		textMgr.Render(camera)
 		textMgr.Unbind()
-
-		batchRenderer.Bind()
-		spriteMgr.GetTexture().Bind()
-		batchRenderer.Render(camera, spriteMgr.GetSheet())
-		batchRenderer.Unbind()
 
 		context.SwapBuffers()
 

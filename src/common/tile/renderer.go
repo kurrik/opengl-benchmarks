@@ -130,14 +130,10 @@ func (r *Renderer) Delete() {
 }
 
 func (r *Renderer) Render(camera *common.Camera, count int, instances []rInstance, sheet *Sheet) (err error) {
-	var (
-		vboBytes = count * int(r.stride)
-		uboBytes = sheet.Bytes()
-	)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	r.vbo.Upload(instances, vboBytes)
-	r.ubo.Upload(sheet.Tiles, uboBytes)
+	r.vbo.Upload(instances, count * int(r.stride))
+	r.ubo.Upload(sheet.Tiles, sheet.Bytes())
 	ptsPerInstance := 6
 	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(count))
 	if e := gl.GetError(); e != 0 {

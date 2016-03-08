@@ -56,8 +56,9 @@ layout (std140) uniform TextureData {
   Tile Tiles[MAX_TILES];
 };
 
+in vec3 v_Position;
+in vec2 v_Texture;
 in float f_Tile;
-in vec3 v_Point;
 uniform mat4 m_Model;
 uniform mat4 m_View;
 uniform mat4 m_Projection;
@@ -67,10 +68,10 @@ out vec2 v_TextureDim;
 
 void main() {
   Tile t_Tile = Tiles[int(f_Tile)];
-  v_TexturePos = v_Point.xy / 4;
+  v_TexturePos = v_Texture;
   v_TextureMin = t_Tile.texture.zw;
   v_TextureDim = t_Tile.texture.xy;
-  gl_Position = m_Projection * m_View * m_Model * vec4(v_Point, 1.0);
+  gl_Position = m_Projection * m_View * m_Model * vec4(v_Position, 1.0);
 }`
 
 type Renderer struct {
@@ -91,11 +92,12 @@ func NewRenderer() (r *Renderer, err error) {
 		return
 	}
 	r.shader.Bind()
-	var point rInstance
+	var point batchPoint
 	r.stride = unsafe.Sizeof(point)
 	r.vbo = common.NewArrayBuffer(r.shader.ID(), r.stride)
-	r.vbo.Vec3("v_Point", unsafe.Offsetof(point.point), 0)
-	r.vbo.Float("f_Tile", unsafe.Offsetof(point.tile), 0)
+	r.vbo.Vec3("v_Position", unsafe.Offsetof(point.Position), 0)
+	r.vbo.Vec2("v_Texture", unsafe.Offsetof(point.Texture), 0)
+	r.vbo.Float("f_Tile", unsafe.Offsetof(point.Tile), 0)
 	r.ubo = common.NewUniformBuffer(r.shader.ID())
 	r.ubo.BlockBinding("TextureData", 1)
 	r.uView = r.shader.Uniform("m_View")
@@ -120,18 +122,19 @@ func (r *Renderer) Delete() {
 	r.ubo.Delete()
 }
 
-func (r *Renderer) Render(camera *common.Camera, sheet *tile.Sheet) (err error) {
-	r.uModel.Mat4(mgl32.Ident4())
+func (r *Renderer) Render(camera *common.Camera, sheet *tile.Sheet, batch *Batch) (err error) {
+	r.uModel.Mat4(batch.Model)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	r.ubo.Upload(sheet.Tiles, sheet.Bytes())
-	data := []rInstance{
-		rInstance{tile: 4, point: mgl32.Vec3{0, 0, 0}},
-		rInstance{tile: 4, point: mgl32.Vec3{1, 0, 0}},
-		rInstance{tile: 4, point: mgl32.Vec3{1, 1, 0}},
+	if batch.Dirty {
+		// TODO: This is a bad idea since you can pass multiple batches
+		// in but only one VBO is used.  VBO should be scoped to
+		// the batch object.
+		r.vbo.Upload(batch.Points, len(batch.Points)*int(r.stride))
+		batch.Dirty = false
 	}
-	r.vbo.Upload(data, len(data)*int(r.stride))
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(data)))
+	r.ubo.Upload(sheet.Tiles, sheet.Bytes())
+	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(batch.Points)))
 	if e := gl.GetError(); e != 0 {
 		err = fmt.Errorf("ERROR: OpenGL error %X", e)
 	}
