@@ -38,7 +38,7 @@ uniform sampler2D u_Texture;
 out vec4 v_FragData;
 
 void main() {
-  vec2 v_TexturePosition = v_TextureMin + mod(v_TexturePos - v_TextureMin, v_TextureDim);
+  vec2 v_TexturePosition = v_TextureMin + mod(v_TexturePos, v_TextureDim);
   v_FragData = texture(u_Texture, v_TexturePosition);
 }`
 
