@@ -21,10 +21,10 @@ import (
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/batch"
-	"github.com/kurrik/opengl-benchmarks/common/renderers"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
+	"github.com/kurrik/opengl-benchmarks/common/util"
 	"image/color"
 	"runtime"
 )
@@ -54,7 +54,7 @@ func main() {
 		context       *common.Context
 		spriteMgr     *spritesheet.Manager
 		camera        *common.Camera
-		framerate     *renderers.Framerate
+		framerate     *util.Framerate
 		font          *text.FontFace
 		fg            = color.RGBA{255, 255, 255, 255}
 		bg            = color.RGBA{0, 0, 0, 255}
@@ -78,7 +78,7 @@ func main() {
 	}); err != nil {
 		panic(err)
 	}
-	if framerate, err = renderers.NewFramerateRenderer(); err != nil {
+	if framerate, err = util.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}
 	if textMgr, err = text.NewManager(text.Config{
