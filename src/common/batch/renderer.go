@@ -124,7 +124,7 @@ func (r *Renderer) Render(camera *common.Camera, sheet *tile.Sheet) (err error) 
 	r.uModel.Mat4(mgl32.Ident4())
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	r.ubo.Upload(sheet.Tiles, sheet.TileBytes())
+	r.ubo.Upload(sheet.Tiles, sheet.Bytes())
 	data := []rInstance{
 		rInstance{tile: 4, point: mgl32.Vec3{0, 0, 0}},
 		rInstance{tile: 4, point: mgl32.Vec3{1, 0, 0}},

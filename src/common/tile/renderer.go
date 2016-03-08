@@ -132,7 +132,7 @@ func (r *Renderer) Delete() {
 func (r *Renderer) Render(camera *common.Camera, count int, instances []rInstance, sheet *Sheet) (err error) {
 	var (
 		vboBytes = count * int(r.stride)
-		uboBytes = sheet.TileBytes()
+		uboBytes = sheet.Bytes()
 	)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)

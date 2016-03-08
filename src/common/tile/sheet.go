@@ -65,7 +65,7 @@ func (s *Sheet) TileBounds(key string) (out image.Rectangle, err error) {
 	return
 }
 
-func (s *Sheet) TileBytes() int {
+func (s *Sheet) Bytes() int {
 	var point Tile
 	return s.Count * int(unsafe.Sizeof(point))
 }
