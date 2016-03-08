@@ -29,9 +29,9 @@ type Config struct {
 
 type Manager struct {
 	*tile.Manager
-	cfg           Config
-	PackedImage   *PackedImage
-	texture *common.Texture
+	cfg         Config
+	PackedImage *PackedImage
+	texture     *common.Texture
 }
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
