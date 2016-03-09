@@ -15,7 +15,6 @@
 package tile
 
 import (
-	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
 )
@@ -26,9 +25,8 @@ type Config struct {
 
 type Manager struct {
 	cfg               Config
-	nextID            InstanceID
 	renderer          *Renderer
-	Instances         map[InstanceID]*TileInstance
+	Instances         InstanceList
 	rendererInstances []rInstance
 	count             int
 }
@@ -36,7 +34,6 @@ type Manager struct {
 func NewManager(cfg Config) (mgr *Manager, err error) {
 	mgr = &Manager{
 		cfg:               cfg,
-		Instances:         map[InstanceID]*TileInstance{},
 		rendererInstances: make([]rInstance, cfg.MaxInstances),
 		count:             0,
 	}
@@ -46,32 +43,14 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	return
 }
 
-func (m *Manager) CreateInstance() (id InstanceID, err error) {
-	if uint32(m.count) >= m.cfg.MaxInstances {
-		err = fmt.Errorf("Max instances reached")
-		return
-	}
-	id = m.nextID
-	m.Instances[id] = &TileInstance{
-		renderIndex: m.count,
-		position:    mgl32.Vec3{0, 0, 0},
-		rotation:    0,
-		Tile:        0,
-		Dirty:       true,
-	}
-	m.nextID += 1
+func (m *Manager) CreateInstance() (inst *Instance, err error) {
+	inst = NewInstance()
+	inst.SetPosition(mgl32.Vec3{0, 0, 0})
+	inst.SetScale(mgl32.Vec3{1.0, 1.0, 1.0})
+	inst.SetRotation(0)
+	inst.Tile = 0
+	m.Instances.Prepend(inst)
 	m.count += 1
-	return
-}
-
-func (m *Manager) GetInstance(id InstanceID) (inst *TileInstance, err error) {
-	var (
-		exists bool
-	)
-	if inst, exists = m.Instances[id]; !exists {
-		err = fmt.Errorf("Invalid text instance ID: %v", id)
-		return
-	}
 	return
 }
 
@@ -89,30 +68,29 @@ func (m *Manager) Delete() {
 
 func (m *Manager) Render(camera *common.Camera, sheet *Sheet) {
 	var (
-		inst  *TileInstance
+		inst  *Instance
 		rinst *rInstance
-		scale mgl32.Mat4
-		rot   mgl32.Mat4
-		trans mgl32.Mat4
+		scale mgl32.Vec3
+		index int
 	)
-	scale = mgl32.Scale3D(
-		1.0/camera.PxPerUnit.X(),
-		1.0/camera.PxPerUnit.Y(),
+	scale = mgl32.Vec3{
+		1.0 / camera.PxPerUnit.X(),
+		1.0 / camera.PxPerUnit.Y(),
 		1.0,
-	)
-	for _, inst = range m.Instances {
-		if inst.Dirty {
-			rinst = &m.rendererInstances[inst.renderIndex]
-			rinst.tile = float32(inst.Tile)
-			rot = mgl32.HomogRotate3DZ(mgl32.DegToRad(inst.rotation))
-			trans = mgl32.Translate3D(
-				inst.position.X(),
-				inst.position.Y(),
-				inst.position.Z(),
-			)
-			rinst.model = trans.Mul4(rot).Mul4(scale)
-			inst.Dirty = false
-		}
 	}
-	m.renderer.Render(camera, m.count, m.rendererInstances, sheet)
+	index = 0
+	inst = m.Instances.Head()
+	for inst != nil {
+		if uint32(index) >= m.cfg.MaxInstances {
+			m.renderer.Render(camera, index, m.rendererInstances, sheet)
+			index = 0
+		}
+		inst.SetScale(scale)
+		rinst = &m.rendererInstances[index]
+		rinst.tile = float32(inst.Tile)
+		rinst.model = inst.GetModel()
+		index++
+		inst = inst.Next()
+	}
+	m.renderer.Render(camera, index, m.rendererInstances, sheet)
 }

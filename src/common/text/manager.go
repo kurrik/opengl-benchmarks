@@ -51,11 +51,13 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	return
 }
 
-func (m *Manager) SetText(id tile.InstanceID, text string, font *FontFace) (err error) {
+func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) (err error) {
 	var (
-		img      draw.Image
-		instance *tile.TileInstance
+		img draw.Image
 	)
+	if instance == nil {
+		return // No error.
+	}
 	if img, err = font.GetImage(text); err != nil {
 		return
 	}
@@ -67,9 +69,6 @@ func (m *Manager) SetText(id tile.InstanceID, text string, font *FontFace) (err 
 		if err = m.PackedImage.Pack(text, img); err != nil {
 			return
 		}
-	}
-	if instance, err = m.GetInstance(id); err != nil {
-		return
 	}
 	if instance.Tile, err = m.PackedImage.Sheet.TileIndex(text); err != nil {
 		return
@@ -98,13 +97,14 @@ func (m *Manager) generateTexture() (err error) {
 func (m *Manager) repackImage() (err error) {
 	var (
 		newImage *PackedImage
-		instance *tile.TileInstance
+		instance *tile.Instance
 	)
 	if glog.V(1) {
 		glog.Info("Repacking image")
 	}
 	newImage = NewPackedImage(m.PackedImage.Width, m.PackedImage.Height)
-	for _, instance = range m.Instances {
+	instance = m.Instances.Head()
+	for instance != nil {
 		if err = newImage.Copy(instance.Key, m.PackedImage); err != nil {
 			return
 		}
@@ -112,6 +112,7 @@ func (m *Manager) repackImage() (err error) {
 			return
 		}
 		instance.Dirty = true
+		instance = instance.Next()
 	}
 	m.PackedImage = newImage
 	if err = m.generateTexture(); err != nil {

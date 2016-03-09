@@ -72,12 +72,9 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	return
 }
 
-func (m *Manager) SetFrame(id tile.InstanceID, frame string) (err error) {
-	var (
-		instance *tile.TileInstance
-	)
-	if instance, err = m.GetInstance(id); err != nil {
-		return
+func (m *Manager) SetFrame(instance *tile.Instance, frame string) (err error) {
+	if instance == nil {
+		return // No error
 	}
 	if instance.Tile, err = m.sheet.TileIndex(frame); err != nil {
 		return

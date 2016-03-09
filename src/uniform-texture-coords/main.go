@@ -65,8 +65,7 @@ func main() {
 		bg            = color.RGBA{0, 0, 0, 255}
 		textMgr       *text.Manager
 		err           error
-		id            tile.InstanceID
-		inst          *tile.TileInstance
+		inst          *tile.Instance
 		rot           int = 0
 		batchRenderer *batch.Renderer
 		textMapping   *batch.TextMapping
@@ -106,13 +105,10 @@ func main() {
 		Inst{Key: "This is text!", X: 0.05, Y: 0.05, R: 0},
 		Inst{Key: "More text!", X: 1, Y: 1, R: 15},
 	} {
-		if id, err = textMgr.CreateInstance(); err != nil {
+		if inst, err = textMgr.CreateInstance(); err != nil {
 			panic(err)
 		}
-		if err = textMgr.SetText(id, s.Key, font); err != nil {
-			panic(err)
-		}
-		if inst, err = textMgr.GetInstance(id); err != nil {
+		if err = textMgr.SetText(inst, s.Key, font); err != nil {
 			panic(err)
 		}
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
@@ -123,13 +119,10 @@ func main() {
 		Inst{Key: "numbered_squares_01", X: -1, Y: -1, R: 0},
 		Inst{Key: "numbered_squares_02", X: -2, Y: -2, R: -15},
 	} {
-		if id, err = spriteMgr.CreateInstance(); err != nil {
+		if inst, err = spriteMgr.CreateInstance(); err != nil {
 			panic(err)
 		}
-		if err = spriteMgr.SetFrame(id, s.Key); err != nil {
-			panic(err)
-		}
-		if inst, err = spriteMgr.GetInstance(id); err != nil {
+		if err = spriteMgr.SetFrame(inst, s.Key); err != nil {
 			panic(err)
 		}
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
@@ -173,7 +166,7 @@ func main() {
 
 		context.SwapBuffers()
 
-		if err = textMgr.SetText(id, fmt.Sprintf("Rotation %v", rot%100), font); err != nil {
+		if err = textMgr.SetText(textMgr.Instances.Head(), fmt.Sprintf("Rotation %v", rot%100), font); err != nil {
 			fmt.Printf("ERROR: %v\n", err)
 			break
 		}

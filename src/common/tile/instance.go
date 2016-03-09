@@ -18,23 +18,96 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type InstanceID int32
-
-type TileInstance struct {
-	renderIndex int
-	Tile        int
-	position    mgl32.Vec3
-	rotation    float32
-	Dirty       bool
-	Key         string
+type Instance struct {
+	model    mgl32.Mat4
+	position mgl32.Vec3
+	scale    mgl32.Vec3
+	rotation float32
+	Key      string
+	Tile     int
+	Dirty    bool
+	next     *Instance
+	prev     *Instance
 }
 
-func (i *TileInstance) SetPosition(p mgl32.Vec3) {
-	i.position = p
-	i.Dirty = true
+func NewInstance() *Instance {
+	return &Instance{
+		Dirty: true,
+	}
 }
 
-func (i *TileInstance) SetRotation(r float32) {
-	i.rotation = r
-	i.Dirty = true
+func (i *Instance) SetScale(s mgl32.Vec3) {
+	if i.scale.X() != s.X() || i.scale.Y() != s.Y() || i.scale.Z() != s.Z() {
+		i.scale = s
+		i.Dirty = true
+	}
+}
+
+func (i *Instance) SetPosition(p mgl32.Vec3) {
+	if i.position.X() != p.X() || i.position.Y() != p.Y() || i.position.Z() != p.Z() {
+		i.position = p
+		i.Dirty = true
+	}
+}
+
+func (i *Instance) SetRotation(r float32) {
+	if i.rotation != r {
+		i.rotation = r
+		i.Dirty = true
+	}
+}
+
+func (i *Instance) GetModel() mgl32.Mat4 {
+	if i.Dirty {
+		var model mgl32.Mat4
+		model = mgl32.Translate3D(
+			i.position.X(),
+			i.position.Y(),
+			i.position.Z(),
+		)
+		model = model.Mul4(mgl32.HomogRotate3DZ(mgl32.DegToRad(i.rotation)))
+		model = model.Mul4(mgl32.Scale3D(i.scale.X(), i.scale.Y(), i.scale.Z()))
+		i.model = model
+		i.Dirty = false
+	}
+	return i.model
+}
+
+func (i *Instance) Next() *Instance {
+	return i.next
+}
+
+func (i *Instance) Remove() {
+	if i.next != nil {
+		i.next.prev = i.prev
+	}
+	if i.prev != nil {
+		i.prev.next = i.next
+	}
+	i.next = nil
+	i.prev = nil
+}
+
+func (i *Instance) InsertAfter(inst *Instance) {
+	if inst == nil {
+		return
+	}
+	if i.next != nil {
+		i.next.prev = inst
+	}
+	inst.next = i.next
+	inst.prev = i
+	i.next = inst
+}
+
+type InstanceList struct {
+	root Instance
+}
+
+func (l *InstanceList) Head() *Instance {
+	return l.root.next
+}
+
+func (l *InstanceList) Prepend(inst *Instance) {
+	l.root.InsertAfter(inst)
 }
