@@ -28,25 +28,29 @@ type TextMapping struct {
 }
 
 func NewTextMapping(sheet *tile.Sheet, defaultTile string) (out *TextMapping, err error) {
-	var index int
+	var (
+		t *tile.Tile
+	)
 	out = &TextMapping{
 		sheet:   sheet,
 		mapping: map[rune]int{},
 	}
-	if index, err = sheet.TileIndex(defaultTile); err != nil {
+	if t, err = sheet.Tile(defaultTile); err != nil {
 		return
 	}
-	out.defaultTile = index
+	out.defaultTile = t.Index()
 	return
 
 }
 
-func (m *TextMapping) Set(r rune, tile string) (err error) {
-	var index int
-	if index, err = m.sheet.TileIndex(tile); err != nil {
+func (m *TextMapping) Set(r rune, key string) (err error) {
+	var (
+		t *tile.Tile
+	)
+	if t, err = m.sheet.Tile(key); err != nil {
 		return
 	}
-	m.mapping[r] = index
+	m.mapping[r] = t.Index()
 	return
 }
 
@@ -68,8 +72,13 @@ func NewTextLoader(mapping *TextMapping) *TextLoader {
 	}
 }
 
-func (l *TextLoader) addTile(x, y float32, index int, batch *Batch) {
-	var findex = float32(index)
+func (l *TextLoader) addTile(x, y float32, index int, scale float32, batch *Batch) {
+	var (
+		findex = float32(index)
+		unit   = scale
+	)
+	x = x * scale
+	y = y * scale
 	batch.Points = append(batch.Points, []batchPoint{
 		batchPoint{
 			Position: mgl32.Vec3{x, y, 0},
@@ -77,12 +86,12 @@ func (l *TextLoader) addTile(x, y float32, index int, batch *Batch) {
 			Tile:     findex,
 		},
 		batchPoint{
-			Position: mgl32.Vec3{x + 1, y + 1, 0},
+			Position: mgl32.Vec3{x + unit, y + unit, 0},
 			Texture:  mgl32.Vec2{1, 1},
 			Tile:     findex,
 		},
 		batchPoint{
-			Position: mgl32.Vec3{x, y + 1, 0},
+			Position: mgl32.Vec3{x, y + unit, 0},
 			Texture:  mgl32.Vec2{0, 1},
 			Tile:     findex,
 		},
@@ -92,19 +101,19 @@ func (l *TextLoader) addTile(x, y float32, index int, batch *Batch) {
 			Tile:     findex,
 		},
 		batchPoint{
-			Position: mgl32.Vec3{x + 1, y, 0},
+			Position: mgl32.Vec3{x + unit, y, 0},
 			Texture:  mgl32.Vec2{1, 0},
 			Tile:     findex,
 		},
 		batchPoint{
-			Position: mgl32.Vec3{x + 1, y + 1, 0},
+			Position: mgl32.Vec3{x + unit, y + unit, 0},
 			Texture:  mgl32.Vec2{1, 1},
 			Tile:     findex,
 		},
 	}...)
 }
 
-func (l *TextLoader) Load(renderer *Renderer, grid string) (out *Batch, err error) {
+func (l *TextLoader) Load(renderer *Renderer, scale float32, grid string) (out *Batch, err error) {
 	var (
 		lines []string
 		line  string
@@ -120,7 +129,7 @@ func (l *TextLoader) Load(renderer *Renderer, grid string) (out *Batch, err erro
 	out = renderer.NewBatch(len(lines) * len(lines[0]) * 6)
 	for y, line = range lines {
 		for x, char = range line {
-			l.addTile(float32(x), float32(y), l.mapping.Get(char), out)
+			l.addTile(float32(x), float32(y), l.mapping.Get(char), scale, out)
 		}
 	}
 	return

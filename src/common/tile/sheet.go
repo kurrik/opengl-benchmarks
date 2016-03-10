@@ -16,30 +16,42 @@ package tile
 
 import (
 	"fmt"
-	"image"
+	"github.com/kurrik/opengl-benchmarks/common"
 	"unsafe"
 )
 
 type Sheet struct {
-	Tiles []Tile
-	Count int
-	keys  map[string]int
+	keys    map[string]*Tile
+	Count   int
+	Version int
+	width   int
+	height  int
 }
 
-func NewSheet() *Sheet {
+func NewSheet(w, h int) *Sheet {
 	return &Sheet{
-		Tiles: []Tile{},
-		Count: 0,
-		keys:  map[string]int{},
+		keys:    map[string]*Tile{},
+		width:   w,
+		height:  h,
+		Count:   0,
+		Version: 0,
 	}
 }
 
-func (s *Sheet) AddTile(key string, tile Tile) {
+func (s *Sheet) AddTile(key string, w, h, x, y int) (out *Tile) {
 	var index int
 	index = s.Count
-	s.Tiles = append(s.Tiles, tile)
-	s.keys[key] = index
+	out = &Tile{
+		index: index,
+		pxW:   w,
+		pxH:   h,
+		pxX:   x,
+		pxY:   y,
+	}
+	s.keys[key] = out
 	s.Count++
+	s.Version++
+	return
 }
 
 func (s *Sheet) TileExists(key string) (exists bool) {
@@ -47,25 +59,24 @@ func (s *Sheet) TileExists(key string) (exists bool) {
 	return
 }
 
-func (s *Sheet) TileIndex(key string) (index int, err error) {
+func (s *Sheet) Tile(key string) (out *Tile, err error) {
 	var exists bool
-	if index, exists = s.keys[key]; !exists {
-		err = fmt.Errorf("Invalid frame %v", index)
+	if out, exists = s.keys[key]; !exists {
+		err = fmt.Errorf("Invalid tile key %v", key)
 		return
 	}
 	return
 }
 
-func (s *Sheet) TileBounds(key string) (out image.Rectangle, err error) {
-	var index int
-	if index, err = s.TileIndex(key); err != nil {
-		return
+func (s *Sheet) Upload(ubo *common.UniformBuffer) {
+	var (
+		t     *Tile
+		entry rTile
+		data  = make([]rTile, s.Count)
+		size  = s.Count * int(unsafe.Sizeof(entry))
+	)
+	for _, t = range s.keys {
+		data[t.index] = t.textureBounds(float32(s.width), float32(s.height))
 	}
-	out = s.Tiles[index].ImageBounds()
-	return
-}
-
-func (s *Sheet) Bytes() int {
-	var point Tile
-	return s.Count * int(unsafe.Sizeof(point))
+	ubo.Upload(data, size)
 }

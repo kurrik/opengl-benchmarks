@@ -50,9 +50,10 @@ func main() {
 	flag.Parse()
 
 	const (
-		WinTitle  = "uniform-texture-coords"
-		WinWidth  = 600
-		WinHeight = 400
+		WinTitle              = "uniform-texture-coords"
+		WinWidth              = 640
+		WinHeight             = 480
+		PixelsPerUnit float32 = 10
 	)
 
 	var (
@@ -80,7 +81,7 @@ func main() {
 	}
 	if spriteMgr, err = spritesheet.NewManager(spritesheet.Config{
 		JsonPath:      "src/resources/spritesheet.json",
-		PixelsPerUnit: 32,
+		PixelsPerUnit: PixelsPerUnit,
 		MaxInstances:  100,
 	}); err != nil {
 		panic(err)
@@ -92,18 +93,19 @@ func main() {
 		MaxInstances:  100,
 		TextureWidth:  512,
 		TextureHeight: 512,
+		PixelsPerUnit: PixelsPerUnit,
 	}); err != nil {
 		panic(err)
 	}
-	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6.4, 4.8, 2}); err != nil {
+	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{64, 48, 2}); err != nil {
 		panic(err)
 	}
 	if font, err = text.NewFontFace("src/resources/Roboto-Light.ttf", 24, fg, bg); err != nil {
 		panic(err)
 	}
 	for _, s := range []Inst{
-		Inst{Key: "This is text!", X: 0.05, Y: 0.05, R: 0},
-		Inst{Key: "More text!", X: 1, Y: 1, R: 15},
+		Inst{Key: "This is text!", X: 0, Y: -10, R: 0},
+		Inst{Key: "More text!", X: 10, Y: 10, R: 15},
 	} {
 		if inst, err = textMgr.CreateInstance(); err != nil {
 			panic(err)
@@ -116,8 +118,8 @@ func main() {
 	}
 
 	for _, s := range []Inst{
-		Inst{Key: "numbered_squares_01", X: -1, Y: -1, R: 0},
-		Inst{Key: "numbered_squares_02", X: -2, Y: -2, R: -15},
+		Inst{Key: "numbered_squares_02", X: 0, Y: 0, R: 0},
+		Inst{Key: "numbered_squares_02", X: -20, Y: -20, R: -15},
 	} {
 		if inst, err = spriteMgr.CreateInstance(); err != nil {
 			panic(err)
@@ -138,7 +140,7 @@ func main() {
 	textMapping.Set('A', "numbered_squares_01")
 	textMapping.Set('B', "numbered_squares_tall_16")
 	textLoader = batch.NewTextLoader(textMapping)
-	if batchData, err = textLoader.Load(batchRenderer, BATCH); err != nil {
+	if batchData, err = textLoader.Load(batchRenderer, 3.2, BATCH); err != nil {
 		panic(err)
 	}
 

@@ -70,14 +70,8 @@ func (m *Manager) Render(camera *common.Camera, sheet *Sheet) {
 	var (
 		inst  *Instance
 		rinst *rInstance
-		scale mgl32.Vec3
 		index int
 	)
-	scale = mgl32.Vec3{
-		1.0 / camera.PxPerUnit.X(),
-		1.0 / camera.PxPerUnit.Y(),
-		1.0,
-	}
 	index = 0
 	inst = m.Instances.Head()
 	for inst != nil {
@@ -85,7 +79,6 @@ func (m *Manager) Render(camera *common.Camera, sheet *Sheet) {
 			m.renderer.Render(camera, index, m.rendererInstances, sheet)
 			index = 0
 		}
-		inst.SetScale(scale)
 		rinst = &m.rendererInstances[index]
 		rinst.tile = float32(inst.Tile)
 		rinst.model = inst.GetModel()

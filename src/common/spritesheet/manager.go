@@ -73,12 +73,15 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 }
 
 func (m *Manager) SetFrame(instance *tile.Instance, frame string) (err error) {
+	var t *tile.Tile
 	if instance == nil {
 		return // No error
 	}
-	if instance.Tile, err = m.sheet.TileIndex(frame); err != nil {
+	if t, err = m.sheet.Tile(frame); err != nil {
 		return
 	}
+	instance.Tile = t.Index()
+	instance.SetScale(t.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
 	instance.Dirty = true
 	instance.Key = frame
 	return

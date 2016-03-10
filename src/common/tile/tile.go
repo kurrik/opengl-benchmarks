@@ -15,24 +15,41 @@
 package tile
 
 import (
+	"github.com/go-gl/mathgl/mgl32"
 	"image"
 )
 
-type Tile [8]float32
-
-func NewTile(texW, texH, texX, texY, pxW, pxH, pxX, pxY float32) Tile {
-	return Tile{texW, texH, texX, texY, pxW, pxH, pxX, pxY}
+type Tile struct {
+	index int
+	pxW   int
+	pxH   int
+	pxX   int
+	pxY   int
 }
 
-func (t Tile) ImageBounds() image.Rectangle {
-	var (
-		x = int(t[6])
-		y = int(t[7])
-		w = int(t[4])
-		h = int(t[5])
-	)
+func (t *Tile) Index() int {
+	return t.index
+}
+
+func (t *Tile) ImageBounds() image.Rectangle {
 	return image.Rectangle{
-		image.Point{x, y},
-		image.Point{x + w, y + h},
+		image.Point{t.pxX, t.pxY},
+		image.Point{t.pxX + t.pxW, t.pxY + t.pxH},
+	}
+}
+
+func (t *Tile) textureBounds(texW, texH float32) rTile {
+	return newRTile(
+		float32(t.pxW) / texW,
+		float32(t.pxH) / texH,
+		float32(t.pxX) / texW,
+		1.0 - float32(t.pxY+t.pxH-1)/texH,
+	)
+}
+
+func (t *Tile) WorldDimensions(pxPerUnit float32) mgl32.Vec2 {
+	return mgl32.Vec2{
+		float32(t.pxW) / pxPerUnit,
+		float32(t.pxH) / pxPerUnit,
 	}
 }

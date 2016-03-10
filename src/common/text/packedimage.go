@@ -23,20 +23,22 @@ import (
 )
 
 type PackedImage struct {
-	Width   int
-	Height  int
-	img     draw.Image
-	shelves []*shelf
-	Sheet   *tile.Sheet
+	Width     int
+	Height    int
+	img       draw.Image
+	shelves   []*shelf
+	Sheet     *tile.Sheet
+	pxPerUnit float32
 }
 
-func NewPackedImage(w, h int) (i *PackedImage) {
+func NewPackedImage(w, h int, pxPerUnit float32) (i *PackedImage) {
 	return &PackedImage{
-		Width:   w,
-		Height:  h,
-		img:     image.NewRGBA(image.Rect(0, 0, w, h)),
-		shelves: []*shelf{newShelf()},
-		Sheet:   tile.NewSheet(),
+		Width:     w,
+		Height:    h,
+		img:       image.NewRGBA(image.Rect(0, 0, w, h)),
+		shelves:   []*shelf{newShelf()},
+		Sheet:     tile.NewSheet(w, h),
+		pxPerUnit: pxPerUnit,
 	}
 }
 
@@ -49,10 +51,14 @@ func (i *PackedImage) Pack(key string, img image.Image) (err error) {
 }
 
 func (i *PackedImage) Copy(key string, src *PackedImage) (err error) {
-	var bounds image.Rectangle
-	if bounds, err = src.Sheet.TileBounds(key); err != nil {
+	var (
+		bounds image.Rectangle
+		t      *tile.Tile
+	)
+	if t, err = src.Sheet.Tile(key); err != nil {
 		return
 	}
+	bounds = t.ImageBounds()
 	return i.packRegion(key, src.img, bounds)
 }
 
@@ -97,16 +103,19 @@ func (i *PackedImage) packRegion(key string, src image.Image, srcBounds image.Re
 		destPt   = image.Pt(x, y)
 		destRect = image.Rectangle{destPt, destPt.Add(image.Pt(w, h))}
 	)
-	i.Sheet.AddTile(key, tile.NewTile(
-		float32(w)/float32(texBounds.Max.X),
-		float32(h)/float32(texBounds.Max.Y),
-		float32(x)/float32(texBounds.Max.X),
-		1.0-float32(y+h)/float32(texBounds.Max.Y),
-		float32(w),
-		float32(h),
-		float32(destRect.Min.X),
-		float32(destRect.Min.Y),
-	))
+	i.Sheet.AddTile(key, w, h, x, y)
+	/*
+		tile.NewTile(
+			float32(w)/float32(texBounds.Max.X),
+			float32(h)/float32(texBounds.Max.Y),
+			float32(x)/float32(texBounds.Max.X),
+			1.0-float32(y+h)/float32(texBounds.Max.Y),
+			float32(w)/i.pxPerUnit,
+			float32(h)/i.pxPerUnit,
+			float32(destRect.Min.X),
+			float32(destRect.Min.Y),
+		))
+	*/
 	if glog.V(2) {
 		glog.Infof("packRegion(%v): dest %v src %v", key, destRect, srcBounds.Min)
 	}

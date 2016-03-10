@@ -22,6 +22,12 @@ import (
 	"unsafe"
 )
 
+type rTile [4]float32
+
+func newRTile(texW, texH, texX, texY float32) rTile {
+	return rTile{texW, texH, texX, texY}
+}
+
 type rInstance struct {
 	model mgl32.Mat4
 	tile  float32
@@ -45,7 +51,6 @@ const TILE_VERTEX = `#version 150
 
 struct Tile {
   vec4 texture;
-  vec4 size;
 };
 
 layout (std140) uniform TextureData {
@@ -79,7 +84,7 @@ out vec2 v_TexturePosition;
 void main() {
   Tile t_Tile = Tiles[int(f_Tile)];
   mat4 m_ModelView = m_View * m_Model;
-  vec4 v_Point = vec4(WorldPoints[gl_VertexID] * t_Tile.size.xy, 0.0, 1.0);
+  vec4 v_Point = vec4(WorldPoints[gl_VertexID], 0.0, 1.0);
   gl_Position = m_Projection * m_ModelView * v_Point;
   v_TexturePosition = TexturePoints[gl_VertexID] * t_Tile.texture.xy + t_Tile.texture.zw;
 }`
@@ -132,8 +137,8 @@ func (r *Renderer) Delete() {
 func (r *Renderer) Render(camera *common.Camera, count int, instances []rInstance, sheet *Sheet) (err error) {
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	r.vbo.Upload(instances, count * int(r.stride))
-	r.ubo.Upload(sheet.Tiles, sheet.Bytes())
+	r.vbo.Upload(instances, count*int(r.stride))
+	sheet.Upload(r.ubo) // TODO: Check if sheet has changed or not
 	ptsPerInstance := 6
 	gl.DrawArraysInstanced(gl.TRIANGLES, 0, int32(ptsPerInstance), int32(count))
 	if e := gl.GetError(); e != 0 {

@@ -53,6 +53,7 @@ type texturePackerJSONArray struct {
 	Meta   texturePackerMeta    `json:meta`
 }
 
+/*
 func (f texturePackerFrame) ToTile(meta texturePackerMeta, pxPerUnit float32) tile.Tile {
 	var (
 		textureX         = float32(f.Frame.X)
@@ -67,16 +68,13 @@ func (f texturePackerFrame) ToTile(meta texturePackerMeta, pxPerUnit float32) ti
 		invTexY          = 1.0 - float32(f.Frame.Y+f.Frame.H-1)/textureOriginalH
 	)
 	return tile.NewTile(
-		texW,
-		texH,
-		texX,
-		invTexY,
-		textureW,
-		textureH,
-		textureX,
-		textureY,
+		f.Frame.W,
+		f.Frame.H,
+		f.Frame.X,
+		f.Frame.Y,
 	)
 }
+*/
 
 func ParseTexturePackerJSONArrayString(contents string, pxPerUnit float32) (s *tile.Sheet, texturePath string, err error) {
 	var (
@@ -86,11 +84,14 @@ func ParseTexturePackerJSONArrayString(contents string, pxPerUnit float32) (s *t
 		return
 	}
 	texturePath = parsed.Meta.Image
-	s = tile.NewSheet()
+	s = tile.NewSheet(parsed.Meta.Size.W, parsed.Meta.Size.H)
 	for _, frame := range parsed.Frames {
 		s.AddTile(
 			frame.Filename,
-			frame.ToTile(parsed.Meta, pxPerUnit),
+			frame.Frame.W,
+			frame.Frame.H,
+			frame.Frame.X,
+			frame.Frame.Y,
 		)
 	}
 	return

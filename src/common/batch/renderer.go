@@ -48,7 +48,6 @@ const BATCH_VERTEX = `#version 150
 
 struct Tile {
   vec4 texture;
-  vec4 size;
 };
 
 layout (std140) uniform TextureData {
@@ -122,7 +121,7 @@ func (r *Renderer) Render(camera *common.Camera, sheet *tile.Sheet, batch *Batch
 	r.uProj.Mat4(camera.Projection)
 	batch.Bind()
 	batch.Upload()
-	r.ubo.Upload(sheet.Tiles, sheet.Bytes())
+	sheet.Upload(r.ubo)
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(batch.Points)))
 	if e := gl.GetError(); e != 0 {
 		err = fmt.Errorf("ERROR: OpenGL error %X", e)

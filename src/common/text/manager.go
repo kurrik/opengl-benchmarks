@@ -25,6 +25,7 @@ type Config struct {
 	MaxInstances  uint32
 	TextureWidth  int
 	TextureHeight int
+	PixelsPerUnit float32
 }
 
 type Manager struct {
@@ -44,9 +45,13 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 		return
 	}
 	mgr = &Manager{
-		Manager:     tileManager,
-		PackedImage: NewPackedImage(cfg.TextureWidth, cfg.TextureHeight),
-		cfg:         cfg,
+		cfg:     cfg,
+		Manager: tileManager,
+		PackedImage: NewPackedImage(
+			cfg.TextureWidth,
+			cfg.TextureHeight,
+			cfg.PixelsPerUnit,
+		),
 	}
 	return
 }
@@ -54,6 +59,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) (err error) {
 	var (
 		img draw.Image
+		t   *tile.Tile
 	)
 	if instance == nil {
 		return // No error.
@@ -70,9 +76,11 @@ func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) 
 			return
 		}
 	}
-	if instance.Tile, err = m.PackedImage.Sheet.TileIndex(text); err != nil {
+	if t, err = m.PackedImage.Sheet.Tile(text); err != nil {
 		return
 	}
+	instance.Tile = t.Index()
+	instance.SetScale(t.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
 	instance.Dirty = true
 	instance.Key = text
 	if err = m.generateTexture(); err != nil {
@@ -98,19 +106,25 @@ func (m *Manager) repackImage() (err error) {
 	var (
 		newImage *PackedImage
 		instance *tile.Instance
+		t        *tile.Tile
 	)
 	if glog.V(1) {
 		glog.Info("Repacking image")
 	}
-	newImage = NewPackedImage(m.PackedImage.Width, m.PackedImage.Height)
+	newImage = NewPackedImage(
+		m.PackedImage.Width,
+		m.PackedImage.Height,
+		m.cfg.PixelsPerUnit,
+	)
 	instance = m.Instances.Head()
 	for instance != nil {
 		if err = newImage.Copy(instance.Key, m.PackedImage); err != nil {
 			return
 		}
-		if instance.Tile, err = newImage.Sheet.TileIndex(instance.Key); err != nil {
+		if t, err = newImage.Sheet.Tile(instance.Key); err != nil {
 			return
 		}
+		instance.Tile = t.Index()
 		instance.Dirty = true
 		instance = instance.Next()
 	}
