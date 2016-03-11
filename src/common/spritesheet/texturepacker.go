@@ -17,7 +17,10 @@ package spritesheet
 import (
 	"encoding/json"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/sheet"
+	"io/ioutil"
+	"path"
 )
 
 type texturePackerFloatCoords struct {
@@ -54,7 +57,34 @@ type texturePackerJSONArray struct {
 	Meta   texturePackerMeta    `json:meta`
 }
 
-func ParseTexturePackerJSONArrayString(contents string, pxPerUnit float32) (regions *sheet.Regions, texturePath string, err error) {
+type TexturePacker struct {
+}
+
+func (p TexturePacker) LoadJSONArray(jsonPath string) (regions *sheet.Regions, err error) {
+	var (
+		dir         string
+		data        []byte
+		texture     *common.Texture
+		texturePath string
+	)
+	dir = path.Dir(jsonPath)
+	if data, err = ioutil.ReadFile(jsonPath); err != nil {
+		return
+	}
+	if regions, texturePath, err = p.ParseJSONArray(string(data)); err != nil {
+		return
+	}
+	if texture, err = common.LoadTexture(
+		path.Join(dir, texturePath),
+		common.SmoothingNearest,
+	); err != nil {
+		return
+	}
+	regions.SetTexture(texture)
+	return
+}
+
+func (p TexturePacker) ParseJSONArray(contents string) (regions *sheet.Regions, texturePath string, err error) {
 	var (
 		parsed texturePackerJSONArray
 	)

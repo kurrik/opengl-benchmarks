@@ -18,8 +18,6 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/sheet"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
-	"io/ioutil"
-	"path"
 )
 
 type Config struct {
@@ -36,34 +34,18 @@ type Manager struct {
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
 	var (
-		data        []byte
-		dir         = path.Dir(cfg.JsonPath)
-		texture     *common.Texture
-		texturePath string
 		tileManager *tile.Manager
 		regions     *sheet.Regions
+		tp          TexturePacker
 	)
 	if tileManager, err = tile.NewManager(tile.Config{
 		MaxInstances: cfg.MaxInstances,
 	}); err != nil {
 		return
 	}
-	if data, err = ioutil.ReadFile(cfg.JsonPath); err != nil {
+	if regions, err = tp.LoadJSONArray(cfg.JsonPath); err != nil {
 		return
 	}
-	if regions, texturePath, err = ParseTexturePackerJSONArrayString(
-		string(data),
-		cfg.PixelsPerUnit,
-	); err != nil {
-		return
-	}
-	if texture, err = common.LoadTexture(
-		path.Join(dir, texturePath),
-		common.SmoothingNearest,
-	); err != nil {
-		return
-	}
-	regions.SetTexture(texture)
 	mgr = &Manager{
 		Manager: tileManager,
 		cfg:     cfg,
