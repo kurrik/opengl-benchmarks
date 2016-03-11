@@ -53,7 +53,7 @@ func main() {
 		WinTitle              = "uniform-texture-coords"
 		WinWidth              = 640
 		WinHeight             = 480
-		PixelsPerUnit float32 = 10
+		PixelsPerUnit float32 = 100
 	)
 
 	var (
@@ -97,15 +97,15 @@ func main() {
 	}); err != nil {
 		panic(err)
 	}
-	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{64, 48, 2}); err != nil {
+	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6.4, 4.8, 2}); err != nil {
 		panic(err)
 	}
 	if font, err = text.NewFontFace("src/resources/Roboto-Light.ttf", 24, fg, bg); err != nil {
 		panic(err)
 	}
 	for _, s := range []Inst{
-		Inst{Key: "This is text!", X: 0, Y: -10, R: 0},
-		Inst{Key: "More text!", X: 10, Y: 10, R: 15},
+		Inst{Key: "This is text!", X: 0, Y: -1.0, R: 0},
+		Inst{Key: "More text!", X: 1.0, Y: 1.0, R: 15},
 	} {
 		if inst, err = textMgr.CreateInstance(); err != nil {
 			panic(err)
@@ -119,7 +119,7 @@ func main() {
 
 	for _, s := range []Inst{
 		Inst{Key: "numbered_squares_02", X: 0, Y: 0, R: 0},
-		Inst{Key: "numbered_squares_02", X: -20, Y: -20, R: -15},
+		Inst{Key: "numbered_squares_02", X: -2.0, Y: -2.0, R: -15},
 	} {
 		if inst, err = spriteMgr.CreateInstance(); err != nil {
 			panic(err)
@@ -134,13 +134,13 @@ func main() {
 	if batchRenderer, err = batch.NewRenderer(); err != nil {
 		panic(err)
 	}
-	if textMapping, err = batch.NewTextMapping(spriteMgr.GetSheet(), "numbered_squares_03"); err != nil {
+	if textMapping, err = batch.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
 		panic(err)
 	}
 	textMapping.Set('A', "numbered_squares_01")
 	textMapping.Set('B', "numbered_squares_tall_16")
 	textLoader = batch.NewTextLoader(textMapping)
-	if batchData, err = textLoader.Load(batchRenderer, 3.2, BATCH); err != nil {
+	if batchData, err = textLoader.Load(batchRenderer, 1, BATCH); err != nil {
 		panic(err)
 	}
 
@@ -150,8 +150,8 @@ func main() {
 		context.Clear()
 
 		batchRenderer.Bind()
-		spriteMgr.GetTexture().Bind()
-		batchRenderer.Render(camera, spriteMgr.GetSheet(), batchData)
+		spriteMgr.Regions().Texture().Bind()
+		batchRenderer.Render(camera, spriteMgr.Regions(), batchData)
 		batchRenderer.Unbind()
 
 		spriteMgr.Bind()
@@ -175,7 +175,7 @@ func main() {
 		inst.SetRotation(float32(rot))
 		rot += 1
 	}
-	if err = common.WritePNG("test-packed.png", textMgr.PackedImage.Image()); err != nil {
+	if err = common.WritePNG("test-packed.png", textMgr.Regions().Image()); err != nil {
 		panic(err)
 	}
 	textMgr.Delete()

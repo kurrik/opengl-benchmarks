@@ -17,47 +17,47 @@ package batch
 import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/kurrik/opengl-benchmarks/common/tile"
+	"github.com/kurrik/opengl-benchmarks/common/sheet"
 	"strings"
 )
 
 type TextMapping struct {
-	defaultTile int
-	mapping     map[rune]int
-	sheet       *tile.Sheet
+	defaultRegion int
+	mapping       map[rune]int
+	regions       *sheet.Regions
 }
 
-func NewTextMapping(sheet *tile.Sheet, defaultTile string) (out *TextMapping, err error) {
+func NewTextMapping(regions *sheet.Regions, defaultRegion string) (out *TextMapping, err error) {
 	var (
-		t *tile.Tile
+		region *sheet.Region
 	)
 	out = &TextMapping{
-		sheet:   sheet,
+		regions: regions,
 		mapping: map[rune]int{},
 	}
-	if t, err = sheet.Tile(defaultTile); err != nil {
+	if region, err = regions.Region(defaultRegion); err != nil {
 		return
 	}
-	out.defaultTile = t.Index()
+	out.defaultRegion = region.Index()
 	return
 
 }
 
 func (m *TextMapping) Set(r rune, key string) (err error) {
 	var (
-		t *tile.Tile
+		region *sheet.Region
 	)
-	if t, err = m.sheet.Tile(key); err != nil {
+	if region, err = m.regions.Region(key); err != nil {
 		return
 	}
-	m.mapping[r] = t.Index()
+	m.mapping[r] = region.Index()
 	return
 }
 
 func (m *TextMapping) Get(r rune) (index int) {
 	var exists bool
 	if index, exists = m.mapping[r]; !exists {
-		index = m.defaultTile
+		index = m.defaultRegion
 	}
 	return
 }

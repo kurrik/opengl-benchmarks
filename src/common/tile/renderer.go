@@ -19,6 +19,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/sheet"
 	"unsafe"
 )
 
@@ -134,7 +135,7 @@ func (r *Renderer) Delete() {
 	r.ubo.Delete()
 }
 
-func (r *Renderer) Render(camera *common.Camera, count int, instances []rInstance, sheet *Sheet) (err error) {
+func (r *Renderer) Render(camera *common.Camera, count int, instances []rInstance, sheet sheet.UniformBufferRegions) (err error) {
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
 	r.vbo.Upload(instances, count*int(r.stride))

@@ -12,44 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tile
+package sheet
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
 	"image"
 )
 
-type Tile struct {
-	index int
-	pxW   int
-	pxH   int
-	pxX   int
-	pxY   int
+type Region struct {
+	index  int
+	bounds mgl32.Vec2
+	offset mgl32.Vec2
 }
 
-func (t *Tile) Index() int {
-	return t.index
+func (r *Region) Index() int {
+	return r.index
 }
 
-func (t *Tile) ImageBounds() image.Rectangle {
+func (r *Region) ImageBounds() image.Rectangle {
 	return image.Rectangle{
-		image.Point{t.pxX, t.pxY},
-		image.Point{t.pxX + t.pxW, t.pxY + t.pxH},
+		image.Point{int(r.offset.X()), int(r.offset.Y())},
+		image.Point{int(r.offset.X() + r.bounds.X()), int(r.offset.Y() + r.bounds.Y())},
 	}
 }
 
-func (t *Tile) textureBounds(texW, texH float32) rTile {
-	return newRTile(
-		float32(t.pxW) / texW,
-		float32(t.pxH) / texH,
-		float32(t.pxX) / texW,
-		1.0 - float32(t.pxY+t.pxH-1)/texH,
+func (r *Region) textureBounds(textureBounds mgl32.Vec2) uniformRegion {
+	return newUniformRegion(
+		r.bounds.X()/textureBounds.X(),
+		r.bounds.Y()/textureBounds.Y(),
+		r.offset.X()/textureBounds.X(),
+		1.0-(r.offset.Y()+r.bounds.Y()-1.0)/textureBounds.Y(),
 	)
 }
 
-func (t *Tile) WorldDimensions(pxPerUnit float32) mgl32.Vec2 {
+func (r *Region) WorldDimensions(pxPerUnit float32) mgl32.Vec2 {
 	return mgl32.Vec2{
-		float32(t.pxW) / pxPerUnit,
-		float32(t.pxH) / pxPerUnit,
+		r.bounds.X() / pxPerUnit,
+		r.bounds.Y() / pxPerUnit,
 	}
 }

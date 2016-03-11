@@ -16,6 +16,7 @@ package spritesheet
 
 import (
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/sheet"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"io/ioutil"
 	"path"
@@ -30,8 +31,7 @@ type Config struct {
 type Manager struct {
 	*tile.Manager
 	cfg     Config
-	sheet   *tile.Sheet
-	texture *common.Texture
+	regions *sheet.Regions
 }
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
@@ -41,7 +41,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 		texture     *common.Texture
 		texturePath string
 		tileManager *tile.Manager
-		sheet       *tile.Sheet
+		regions     *sheet.Regions
 	)
 	if tileManager, err = tile.NewManager(tile.Config{
 		MaxInstances: cfg.MaxInstances,
@@ -51,7 +51,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	if data, err = ioutil.ReadFile(cfg.JsonPath); err != nil {
 		return
 	}
-	if sheet, texturePath, err = ParseTexturePackerJSONArrayString(
+	if regions, texturePath, err = ParseTexturePackerJSONArrayString(
 		string(data),
 		cfg.PixelsPerUnit,
 	); err != nil {
@@ -63,62 +63,51 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	); err != nil {
 		return
 	}
+	regions.SetTexture(texture)
 	mgr = &Manager{
 		Manager: tileManager,
-		sheet:   sheet,
-		texture: texture,
 		cfg:     cfg,
+		regions: regions,
 	}
 	return
 }
 
 func (m *Manager) SetFrame(instance *tile.Instance, frame string) (err error) {
-	var t *tile.Tile
+	var r *sheet.Region
 	if instance == nil {
 		return // No error
 	}
-	if t, err = m.sheet.Tile(frame); err != nil {
+	if r, err = m.regions.Region(frame); err != nil {
 		return
 	}
-	instance.Tile = t.Index()
-	instance.SetScale(t.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
+	instance.Tile = r.Index()
+	instance.SetScale(r.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
 	instance.Dirty = true
 	instance.Key = frame
 	return
 }
 
 func (m *Manager) Bind() {
-	if m.texture != nil {
-		m.texture.Bind()
-	}
+	m.regions.Bind()
 	m.Manager.Bind()
 }
 
 func (m *Manager) Unbind() {
-	if m.texture != nil {
-		m.texture.Unbind()
-	}
+	m.regions.Unbind()
 	m.Manager.Unbind()
 }
 
 func (m *Manager) Delete() {
-	if m.texture != nil {
-		m.texture.Delete()
-		m.texture = nil
-	}
+	m.regions.Delete()
+	m.regions = nil
 	m.Manager.Delete()
 }
 
 func (m *Manager) Render(camera *common.Camera) {
-	m.Manager.Render(camera, m.sheet)
+	m.Manager.Render(camera, m.regions)
 }
 
 // TODO: Refactor so that sheet can be shared between multiple renderers / managers.
-func (m *Manager) GetSheet() *tile.Sheet {
-	return m.sheet
-}
-
-// TODO: Refactor so that texture can be shared between multiple renderers / managers.
-func (m *Manager) GetTexture() *common.Texture {
-	return m.texture
+func (m *Manager) Regions() *sheet.Regions {
+	return m.regions
 }

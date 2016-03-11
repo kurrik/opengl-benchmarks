@@ -17,6 +17,7 @@ package text
 import (
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/sheet"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"image/draw"
 )
@@ -30,9 +31,8 @@ type Config struct {
 
 type Manager struct {
 	*tile.Manager
-	cfg         Config
-	PackedImage *PackedImage
-	texture     *common.Texture
+	cfg     Config
+	regions *sheet.PackedRegions
 }
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
@@ -47,10 +47,9 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	mgr = &Manager{
 		cfg:     cfg,
 		Manager: tileManager,
-		PackedImage: NewPackedImage(
+		regions: sheet.NewPackedRegions(
 			cfg.TextureWidth,
 			cfg.TextureHeight,
-			cfg.PixelsPerUnit,
 		),
 	}
 	return
@@ -58,8 +57,8 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 
 func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) (err error) {
 	var (
-		img draw.Image
-		t   *tile.Tile
+		img    draw.Image
+		region *sheet.Region
 	)
 	if instance == nil {
 		return // No error.
@@ -67,20 +66,20 @@ func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) 
 	if img, err = font.GetImage(text); err != nil {
 		return
 	}
-	if err = m.PackedImage.Pack(text, img); err != nil {
+	if err = m.regions.Pack(text, img); err != nil {
 		// Attempt to compact the texture.
 		if err = m.repackImage(); err != nil {
 			return
 		}
-		if err = m.PackedImage.Pack(text, img); err != nil {
+		if err = m.regions.Pack(text, img); err != nil {
 			return
 		}
 	}
-	if t, err = m.PackedImage.Sheet.Tile(text); err != nil {
+	if region, err = m.regions.Regions.Region(text); err != nil {
 		return
 	}
-	instance.Tile = t.Index()
-	instance.SetScale(t.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
+	instance.Tile = region.Index()
+	instance.SetScale(region.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
 	instance.Dirty = true
 	instance.Key = text
 	if err = m.generateTexture(); err != nil {
@@ -90,45 +89,45 @@ func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) 
 }
 
 func (m *Manager) generateTexture() (err error) {
-	if m.texture != nil {
-		m.texture.Delete()
-	}
-	if m.texture, err = common.GetTexture(
-		m.PackedImage.Image(),
+	var (
+		texture *common.Texture
+	)
+	if texture, err = common.GetTexture(
+		m.regions.Image(),
 		common.SmoothingLinear,
 	); err != nil {
 		return
 	}
+	m.regions.SetTexture(texture)
 	return
 }
 
 func (m *Manager) repackImage() (err error) {
 	var (
-		newImage *PackedImage
+		newImage *sheet.PackedRegions
 		instance *tile.Instance
-		t        *tile.Tile
+		region   *sheet.Region
 	)
 	if glog.V(1) {
 		glog.Info("Repacking image")
 	}
-	newImage = NewPackedImage(
-		m.PackedImage.Width,
-		m.PackedImage.Height,
-		m.cfg.PixelsPerUnit,
+	newImage = sheet.NewPackedRegions(
+		m.regions.Width,
+		m.regions.Height,
 	)
 	instance = m.Instances.Head()
 	for instance != nil {
-		if err = newImage.Copy(instance.Key, m.PackedImage); err != nil {
+		if err = newImage.Copy(instance.Key, m.regions); err != nil {
 			return
 		}
-		if t, err = newImage.Sheet.Tile(instance.Key); err != nil {
+		if region, err = newImage.Regions.Region(instance.Key); err != nil {
 			return
 		}
-		instance.Tile = t.Index()
+		instance.Tile = region.Index()
 		instance.Dirty = true
 		instance = instance.Next()
 	}
-	m.PackedImage = newImage
+	m.regions = newImage
 	if err = m.generateTexture(); err != nil {
 		return
 	}
@@ -139,27 +138,26 @@ func (m *Manager) repackImage() (err error) {
 }
 
 func (m *Manager) Bind() {
-	if m.texture != nil {
-		m.texture.Bind()
-	}
+	m.regions.Bind()
 	m.Manager.Bind()
 }
 
 func (m *Manager) Unbind() {
-	if m.texture != nil {
-		m.texture.Unbind()
-	}
+	m.regions.Unbind()
 	m.Manager.Unbind()
 }
 
 func (m *Manager) Delete() {
-	if m.texture != nil {
-		m.texture.Delete()
-		m.texture = nil
-	}
+	m.regions.Delete()
 	m.Manager.Delete()
+	m.regions = nil
+	m.Manager = nil
 }
 
 func (m *Manager) Render(camera *common.Camera) {
-	m.Manager.Render(camera, m.PackedImage.Sheet)
+	m.Manager.Render(camera, m.regions)
+}
+
+func (m *Manager) Regions() *sheet.PackedRegions {
+	return m.regions
 }

@@ -16,7 +16,8 @@ package spritesheet
 
 import (
 	"encoding/json"
-	"github.com/kurrik/opengl-benchmarks/common/tile"
+	"github.com/go-gl/mathgl/mgl32"
+	"github.com/kurrik/opengl-benchmarks/common/sheet"
 )
 
 type texturePackerFloatCoords struct {
@@ -53,45 +54,26 @@ type texturePackerJSONArray struct {
 	Meta   texturePackerMeta    `json:meta`
 }
 
-/*
-func (f texturePackerFrame) ToTile(meta texturePackerMeta, pxPerUnit float32) tile.Tile {
-	var (
-		textureX         = float32(f.Frame.X)
-		textureY         = float32(f.Frame.Y)
-		textureW         = float32(f.Frame.W)
-		textureH         = float32(f.Frame.H)
-		textureOriginalW = float32(meta.Size.W)
-		textureOriginalH = float32(meta.Size.H)
-		texX             = textureX / textureOriginalW
-		texW             = textureW / textureOriginalW
-		texH             = textureH / textureOriginalH
-		invTexY          = 1.0 - float32(f.Frame.Y+f.Frame.H-1)/textureOriginalH
-	)
-	return tile.NewTile(
-		f.Frame.W,
-		f.Frame.H,
-		f.Frame.X,
-		f.Frame.Y,
-	)
-}
-*/
-
-func ParseTexturePackerJSONArrayString(contents string, pxPerUnit float32) (s *tile.Sheet, texturePath string, err error) {
+func ParseTexturePackerJSONArrayString(contents string, pxPerUnit float32) (regions *sheet.Regions, texturePath string, err error) {
 	var (
 		parsed texturePackerJSONArray
 	)
 	if err = json.Unmarshal([]byte(contents), &parsed); err != nil {
 		return
 	}
-	texturePath = parsed.Meta.Image
-	s = tile.NewSheet(parsed.Meta.Size.W, parsed.Meta.Size.H)
+	texturePath = parsed.Meta.Image // TODO: Load texture and add directly to sheet.
+	regions = sheet.NewRegions()
 	for _, frame := range parsed.Frames {
-		s.AddTile(
+		regions.AddRegion(
 			frame.Filename,
-			frame.Frame.W,
-			frame.Frame.H,
-			frame.Frame.X,
-			frame.Frame.Y,
+			mgl32.Vec2{
+				float32(frame.Frame.W),
+				float32(frame.Frame.H),
+			},
+			mgl32.Vec2{
+				float32(frame.Frame.X),
+				float32(frame.Frame.Y),
+			},
 		)
 	}
 	return

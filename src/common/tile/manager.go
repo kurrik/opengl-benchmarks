@@ -17,6 +17,7 @@ package tile
 import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/sheet"
 )
 
 type Config struct {
@@ -66,7 +67,7 @@ func (m *Manager) Delete() {
 	m.renderer.Delete()
 }
 
-func (m *Manager) Render(camera *common.Camera, sheet *Sheet) {
+func (m *Manager) Render(camera *common.Camera, sheet sheet.UniformBufferRegions) {
 	var (
 		inst  *Instance
 		rinst *rInstance

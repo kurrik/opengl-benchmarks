@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package text
+package sheet
 
-type shelf struct {
+type packingShelf struct {
 	x      int
 	y      int
 	height int
 	isOpen bool
 }
 
-func newShelf() *shelf {
-	return &shelf{
+func newShelf() *packingShelf {
+	return &packingShelf{
 		x:      0,
 		y:      0,
 		height: 0,
@@ -30,19 +30,19 @@ func newShelf() *shelf {
 	}
 }
 
-func (s *shelf) FitsX(w, maxW int) bool {
+func (s *packingShelf) FitsX(w, maxW int) bool {
 	return s.x+w <= maxW
 }
 
-func (s *shelf) FitsY(h int) bool {
+func (s *packingShelf) FitsY(h int) bool {
 	return s.height >= h
 }
 
-func (s *shelf) RemainingX(maxW int) int {
+func (s *packingShelf) RemainingX(maxW int) int {
 	return maxW - s.x
 }
 
-func (s *shelf) CanAdd(w, h, maxW int) bool {
+func (s *packingShelf) CanAdd(w, h, maxW int) bool {
 	if !s.FitsX(w, maxW) {
 		return false
 	}
@@ -52,7 +52,7 @@ func (s *shelf) CanAdd(w, h, maxW int) bool {
 	return true
 }
 
-func (s *shelf) Add(w, h int) (origX, origY int) {
+func (s *packingShelf) Add(w, h int) (origX, origY int) {
 	origX = s.x
 	origY = s.y
 	if s.height < h {
@@ -62,17 +62,17 @@ func (s *shelf) Add(w, h int) (origX, origY int) {
 	return
 }
 
-func (s *shelf) Close() (out *shelf) {
+func (s *packingShelf) Close() (out *packingShelf) {
 	out = newShelf()
 	out.y = s.y + s.height
 	s.isOpen = false
 	return
 }
 
-func (s *shelf) BestAreaFit(w, h, maxW int) int {
+func (s *packingShelf) BestAreaFit(w, h, maxW int) int {
 	var (
-		shelfArea = s.RemainingX(maxW) * s.height
+		packingShelfArea = s.RemainingX(maxW) * s.height
 		wordArea  = w * h
 	)
-	return shelfArea - wordArea
+	return packingShelfArea - wordArea
 }

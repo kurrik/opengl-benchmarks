@@ -19,7 +19,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/tile"
+	"github.com/kurrik/opengl-benchmarks/common/sheet"
 )
 
 type rInstance struct {
@@ -115,13 +115,13 @@ func (r *Renderer) Delete() {
 	r.ubo.Delete()
 }
 
-func (r *Renderer) Render(camera *common.Camera, sheet *tile.Sheet, batch *Batch) (err error) {
+func (r *Renderer) Render(camera *common.Camera, regions sheet.UniformBufferRegions, batch *Batch) (err error) {
 	r.uModel.Mat4(batch.Model)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
 	batch.Bind()
 	batch.Upload()
-	sheet.Upload(r.ubo)
+	regions.Upload(r.ubo)
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(batch.Points)))
 	if e := gl.GetError(); e != 0 {
 		err = fmt.Errorf("ERROR: OpenGL error %X", e)
