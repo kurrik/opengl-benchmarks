@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package batch
+package render
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
@@ -20,49 +20,54 @@ import (
 	"unsafe"
 )
 
-type batchPoint struct {
+type Point struct {
 	Position mgl32.Vec3
 	Texture  mgl32.Vec2
-	Tile     float32
+	Frame    float32
 }
 
-type Batch struct {
-	Points []batchPoint
-	Model  mgl32.Mat4
+type Geometry struct {
+	Points []Point
 	Dirty  bool
 	vbo    *common.ArrayBuffer
 	stride uintptr
 }
 
-func newBatch(shaderID uint32, posName, texName, tileName string, capacity int) (out *Batch) {
+func NewGeometry(capacity int) (out *Geometry) {
 	var (
-		point  batchPoint
+		point  Point
 		stride uintptr = unsafe.Sizeof(point)
 	)
-	out = &Batch{
-		Points: make([]batchPoint, 0, capacity),
-		Model:  mgl32.Ident4(),
+	out = &Geometry{
+		Points: make([]Point, 0, capacity),
 		Dirty:  true,
 		stride: stride,
 		vbo:    common.NewArrayBuffer(stride),
 	}
-	out.vbo.Vec3(shaderID, posName, unsafe.Offsetof(point.Position), 0)
-	out.vbo.Vec2(shaderID, texName, unsafe.Offsetof(point.Texture), 0)
-	out.vbo.Float(shaderID, tileName, unsafe.Offsetof(point.Tile), 0)
 	return
 }
 
-func (b *Batch) Bind() {
-	b.vbo.Bind()
+func (g *Geometry) Register(shaderID uint32, posName, texName, tileName string) {
+	var point Point
+	g.vbo.Vec3(shaderID, posName, unsafe.Offsetof(point.Position), 0)
+	g.vbo.Vec2(shaderID, texName, unsafe.Offsetof(point.Texture), 0)
+	g.vbo.Float(shaderID, tileName, unsafe.Offsetof(point.Frame), 0)
 }
 
-func (b *Batch) Delete() {
-	b.vbo.Delete()
+func (g *Geometry) Bind() {
+	g.vbo.Bind()
 }
 
-func (b *Batch) Upload() {
-	if b.Dirty {
-		b.vbo.Upload(b.Points, len(b.Points)*int(b.stride))
-		b.Dirty = false
+func (g *Geometry) Delete() {
+	if g.vbo != nil {
+		g.vbo.Delete()
+		g.vbo = nil
+	}
+}
+
+func (g *Geometry) Upload() {
+	if g.Dirty {
+		g.vbo.Upload(g.Points, len(g.Points)*int(g.stride))
+		g.Dirty = false
 	}
 }

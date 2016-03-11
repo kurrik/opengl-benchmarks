@@ -85,14 +85,12 @@ func (b *UniformBuffer) Upload(data interface{}, size int) {
 
 type ArrayBuffer struct {
 	*GLBuffer
-	programID uint32
 	stride    uintptr
 }
 
-func NewArrayBuffer(programID uint32, stride uintptr) (b *ArrayBuffer) {
+func NewArrayBuffer(stride uintptr) (b *ArrayBuffer) {
 	b = &ArrayBuffer{
 		GLBuffer:  NewGLBuffer(gl.ARRAY_BUFFER),
-		programID: programID,
 		stride:    stride,
 	}
 	return
@@ -105,32 +103,32 @@ func (b *ArrayBuffer) vertexAttrib(location uint32, size int32, xtype uint32, of
 	gl.VertexAttribDivisor(location, divisor)
 }
 
-func (b *ArrayBuffer) VertexAttrib(name string, size int32, xtype uint32, offset uintptr, divisor uint32) {
+func (b *ArrayBuffer) VertexAttrib(programID uint32, name string, size int32, xtype uint32, offset uintptr, divisor uint32) {
 	var (
 		nameStr  = gl.Str(fmt.Sprintf("%v\x00", name))
-		location = uint32(gl.GetAttribLocation(b.programID, nameStr))
+		location = uint32(gl.GetAttribLocation(programID, nameStr))
 	)
 	b.vertexAttrib(location, size, xtype, offset, divisor)
 }
 
-func (b *ArrayBuffer) Float(name string, offset uintptr, divisor uint32) {
-	b.VertexAttrib(name, 1, gl.FLOAT, offset, divisor)
+func (b *ArrayBuffer) Float(programID uint32, name string, offset uintptr, divisor uint32) {
+	b.VertexAttrib(programID, name, 1, gl.FLOAT, offset, divisor)
 }
 
-func (b *ArrayBuffer) Vec2(name string, offset uintptr, divisor uint32) {
-	b.VertexAttrib(name, 2, gl.FLOAT, offset, divisor)
+func (b *ArrayBuffer) Vec2(programID uint32, name string, offset uintptr, divisor uint32) {
+	b.VertexAttrib(programID, name, 2, gl.FLOAT, offset, divisor)
 }
 
-func (b *ArrayBuffer) Vec3(name string, offset uintptr, divisor uint32) {
-	b.VertexAttrib(name, 3, gl.FLOAT, offset, divisor)
+func (b *ArrayBuffer) Vec3(programID uint32, name string, offset uintptr, divisor uint32) {
+	b.VertexAttrib(programID, name, 3, gl.FLOAT, offset, divisor)
 }
 
-func (b *ArrayBuffer) Mat4(name string, offset uintptr, divisor uint32) {
+func (b *ArrayBuffer) Mat4(programID uint32, name string, offset uintptr, divisor uint32) {
 	var (
 		float    float32
 		sizeVec4 = unsafe.Sizeof(float) * 4
 		nameStr  = gl.Str(fmt.Sprintf("%v\x00", name))
-		location = uint32(gl.GetAttribLocation(b.programID, nameStr))
+		location = uint32(gl.GetAttribLocation(programID, nameStr))
 	)
 	b.vertexAttrib(location, 4, gl.FLOAT, offset, divisor)
 	b.vertexAttrib(location+1, 4, gl.FLOAT, offset+sizeVec4, divisor)

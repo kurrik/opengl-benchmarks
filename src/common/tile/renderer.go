@@ -109,9 +109,9 @@ func NewRenderer() (r *Renderer, err error) {
 	r.shader.Bind()
 	var point rInstance
 	r.stride = unsafe.Sizeof(point)
-	r.vbo = common.NewArrayBuffer(r.shader.ID(), r.stride)
-	r.vbo.Float("f_Tile", unsafe.Offsetof(point.tile), 1)
-	r.vbo.Mat4("m_Model", unsafe.Offsetof(point.model), 1)
+	r.vbo = common.NewArrayBuffer(r.stride)
+	r.vbo.Float(r.shader.ID(), "f_Tile", unsafe.Offsetof(point.tile), 1)
+	r.vbo.Mat4(r.shader.ID(), "m_Model", unsafe.Offsetof(point.model), 1)
 	r.ubo = common.NewUniformBuffer(r.shader.ID())
 	r.ubo.BlockBinding("TextureData", 1)
 	r.uView = r.shader.Uniform("m_View")

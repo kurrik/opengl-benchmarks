@@ -21,6 +21,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/batch"
+	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
@@ -72,6 +73,7 @@ func main() {
 		textMapping   *batch.TextMapping
 		textLoader    *batch.TextLoader
 		batchData     *batch.Batch
+		renderer      *render.Renderer
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
@@ -144,6 +146,10 @@ func main() {
 		panic(err)
 	}
 
+	if renderer, err = render.NewRenderer(100); err != nil {
+		panic(err)
+	}
+
 	//fmt.Printf("Sheet: %v\n", sprites.Tiles)
 	for !context.ShouldClose() {
 		context.Events.Poll()
@@ -165,6 +171,10 @@ func main() {
 		textMgr.Bind()
 		textMgr.Render(camera)
 		textMgr.Unbind()
+
+		renderer.Bind()
+		//renderer.Render(camera, spriteMgr.Regions(), ..., ...)
+		renderer.Unbind()
 
 		context.SwapBuffers()
 
