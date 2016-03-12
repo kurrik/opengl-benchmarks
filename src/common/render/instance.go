@@ -31,7 +31,10 @@ type Instance struct {
 
 func NewInstance() *Instance {
 	return &Instance{
-		dirty: true,
+		scale:    mgl32.Vec3{1.0, 1.0, 1.0},
+		position: mgl32.Vec3{0.0, 0.0, 0.0},
+		rotation: 0,
+		dirty:    true,
 	}
 }
 

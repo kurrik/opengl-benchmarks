@@ -20,7 +20,8 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/batch"
+	// "github.com/kurrik/opengl-benchmarks/common/batch"
+	"github.com/kurrik/opengl-benchmarks/common/loaders"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
@@ -58,27 +59,29 @@ func main() {
 	)
 
 	var (
-		context       *common.Context
-		spriteMgr     *spritesheet.Manager
-		camera        *common.Camera
-		framerate     *util.Framerate
-		font          *text.FontFace
-		fg            = color.RGBA{255, 255, 255, 255}
-		bg            = color.RGBA{0, 0, 0, 255}
-		textMgr       *text.Manager
-		err           error
-		inst          *tile.Instance
-		rot           int = 0
-		batchRenderer *batch.Renderer
-		textMapping   *batch.TextMapping
-		textLoader    *batch.TextLoader
-		batchData     *batch.Batch
-		renderer      *render.Renderer
+		context     *common.Context
+		spriteMgr   *spritesheet.Manager
+		camera      *common.Camera
+		framerate   *util.Framerate
+		font        *text.FontFace
+		fg          = color.RGBA{255, 255, 255, 255}
+		bg          = color.RGBA{0, 0, 0, 255}
+		textMgr     *text.Manager
+		err         error
+		inst        *tile.Instance
+		rot         int = 0
+		textMapping *loaders.TextMapping
+		textLoader  *loaders.TextLoader
+		batchData   *render.Geometry
+		renderer    *render.Renderer
 	)
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
 	}
 	if err = context.CreateWindow(WinWidth, WinHeight, WinTitle); err != nil {
+		panic(err)
+	}
+	if renderer, err = render.NewRenderer(100); err != nil {
 		panic(err)
 	}
 	if spriteMgr, err = spritesheet.NewManager(spritesheet.Config{
@@ -120,7 +123,7 @@ func main() {
 	}
 
 	for _, s := range []Inst{
-		Inst{Key: "numbered_squares_02", X: 0, Y: 0, R: 0},
+		Inst{Key: "numbered_squares_01", X: 0, Y: 0, R: 0},
 		Inst{Key: "numbered_squares_02", X: -2.0, Y: -2.0, R: -15},
 	} {
 		if inst, err = spriteMgr.CreateInstance(); err != nil {
@@ -133,32 +136,37 @@ func main() {
 		inst.SetRotation(s.R)
 	}
 
-	if batchRenderer, err = batch.NewRenderer(); err != nil {
+	if renderer, err = render.NewRenderer(100); err != nil {
 		panic(err)
 	}
-	if textMapping, err = batch.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
+	/*
+		if textMapping, err = batch.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
+			panic(err)
+		}
+	*/
+	if textMapping, err = loaders.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
 		panic(err)
 	}
 	textMapping.Set('A', "numbered_squares_01")
 	textMapping.Set('B', "numbered_squares_tall_16")
-	textLoader = batch.NewTextLoader(textMapping)
-	if batchData, err = textLoader.Load(batchRenderer, 1, BATCH); err != nil {
+	textLoader = loaders.NewTextLoader(textMapping)
+	if batchData, err = textLoader.Load(renderer, 1, BATCH); err != nil {
 		panic(err)
 	}
-
-	if renderer, err = render.NewRenderer(100); err != nil {
-		panic(err)
-	}
-
 	//fmt.Printf("Sheet: %v\n", sprites.Tiles)
+	//fmt.Printf("BatchData: %v\n", batchData)
+	//fmt.Printf("Framerate: %v\n", framerate)
+	renderer.Register(batchData)
 	for !context.ShouldClose() {
 		context.Events.Poll()
 		context.Clear()
 
-		batchRenderer.Bind()
+		renderer.Bind()
 		spriteMgr.Regions().Texture().Bind()
-		batchRenderer.Render(camera, spriteMgr.Regions(), batchData)
-		batchRenderer.Unbind()
+		instanceList := render.NewInstanceList()
+		instanceList.Prepend(render.NewInstance())
+		renderer.Render(camera, spriteMgr.Regions(), batchData, instanceList)
+		renderer.Unbind()
 
 		spriteMgr.Bind()
 		spriteMgr.Render(camera)
@@ -171,10 +179,6 @@ func main() {
 		textMgr.Bind()
 		textMgr.Render(camera)
 		textMgr.Unbind()
-
-		renderer.Bind()
-		//renderer.Render(camera, spriteMgr.Regions(), ..., ...)
-		renderer.Unbind()
 
 		context.SwapBuffers()
 

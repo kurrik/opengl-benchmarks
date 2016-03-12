@@ -52,7 +52,8 @@ layout (std140) uniform TextureData {
 
 in vec3 v_Position;
 in vec2 v_Texture;
-in float f_Tile;
+in float f_VertexFrame;
+in float f_InstanceFrame;
 in mat4 m_Model;
 uniform mat4 m_View;
 uniform mat4 m_Projection;
@@ -60,8 +61,26 @@ out vec2 v_TexturePos;
 out vec2 v_TextureMin;
 out vec2 v_TextureDim;
 
+const vec2 WorldPoints[] = vec2[6](
+  vec2(-0.5, -0.5),
+  vec2( 0.5,  0.5),
+  vec2(-0.5,  0.5),
+  vec2(-0.5, -0.5),
+  vec2( 0.5, -0.5),
+  vec2( 0.5,  0.5)
+);
+
+const vec2 TexturePoints[] = vec2[6](
+  vec2(0.0, 0.0),
+  vec2(1.0, 1.0),
+  vec2(0.0, 1.0),
+  vec2(0.0, 0.0),
+  vec2(1.0, 0.0),
+  vec2(1.0, 1.0)
+);
+
 void main() {
-  Tile t_Tile = Tiles[int(f_Tile)];
+  Tile t_Tile = Tiles[int(f_VertexFrame + f_InstanceFrame)];
   v_TextureMin = t_Tile.texture.zw;
   v_TextureDim = t_Tile.texture.xy;
   v_TexturePos = v_Texture * v_TextureDim;
@@ -86,38 +105,38 @@ type Renderer struct {
 
 func NewRenderer(bufferSize int) (r *Renderer, err error) {
 	var (
-		point  renderInstance
-		stride = unsafe.Sizeof(point)
+		instance       renderInstance
+		instanceStride = unsafe.Sizeof(instance)
 	)
 	r = &Renderer{
 		shader:     common.NewProgram(),
 		bufferSize: bufferSize,
 		buffer:     make([]renderInstance, bufferSize),
-		stride:     stride,
+		stride:     instanceStride,
 	}
 	if err = r.shader.Load(VERTEX, FRAGMENT); err != nil {
 		return
 	}
 	r.shader.Bind()
-	r.vbo = common.NewArrayBuffer(stride)
-	r.vbo.Float(r.shader.ID(), "f_Frame", unsafe.Offsetof(point.frame), 1)
-	r.vbo.Mat4(r.shader.ID(), "m_Model", unsafe.Offsetof(point.model), 1)
+	r.vbo = common.NewArrayBuffer(instanceStride)
+	r.vbo.Float(r.shader.ID(), "f_InstanceFrame", unsafe.Offsetof(instance.frame), 1)
+	r.vbo.Mat4(r.shader.ID(), "m_Model", unsafe.Offsetof(instance.model), 1)
 	r.ubo = common.NewUniformBuffer(r.shader.ID())
 	r.ubo.BlockBinding("TextureData", 1)
 	r.uView = r.shader.Uniform("m_View")
 	r.uProj = r.shader.Uniform("m_Projection")
+	if e := gl.GetError(); e != 0 {
+		err = fmt.Errorf("ERROR: OpenGL error %X", e)
+	}
 	return
 }
 
 func (r *Renderer) Bind() {
 	r.shader.Bind()
-	r.ubo.Bind()
-	r.vbo.Bind()
 }
 
 func (r *Renderer) Register(geometry *Geometry) {
-	geometry.Bind()
-	geometry.Register(r.shader.ID(), "v_Position", "v_Texture", "f_Tile")
+	geometry.Register(r.shader.ID(), "v_Position", "v_Texture", "f_VertexFrame")
 }
 
 func (r *Renderer) Unbind() {
@@ -164,23 +183,22 @@ func (r *Renderer) Render(
 	)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	geometry.Bind()
-	geometry.Upload()
 	regions.Upload(r.ubo)
+	geometry.Upload()
 	index = 0
 	instance = instances.Head()
 	if instance != nil {
-		if index >= r.bufferSize {
-			if err = r.draw(geometry, index); err != nil {
-				return
-			}
-			index = 0
-		}
 		i = &r.buffer[index]
 		i.frame = float32(instance.Frame)
 		i.model = instance.GetModel()
 		index++
 		instance = instance.Next()
+		if index >= r.bufferSize-1 {
+			if err = r.draw(geometry, index); err != nil {
+				return
+			}
+			index = 0
+		}
 	}
 	err = r.draw(geometry, index)
 	return

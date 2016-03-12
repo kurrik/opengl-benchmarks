@@ -47,6 +47,7 @@ func (b *GLBuffer) Delete() {
 }
 
 func (b *GLBuffer) Upload(data interface{}, size int) {
+	b.Bind()
 	if size > b.bufferBytes {
 		b.bufferBytes = size
 		gl.BufferData(b.target, size, gl.Ptr(data), gl.STREAM_DRAW)
@@ -97,6 +98,7 @@ func NewArrayBuffer(stride uintptr) (b *ArrayBuffer) {
 }
 
 func (b *ArrayBuffer) vertexAttrib(location uint32, size int32, xtype uint32, offset uintptr, divisor uint32) {
+	b.Bind()
 	var offsetPtr = gl.PtrOffset(int(offset))
 	gl.EnableVertexAttribArray(location)
 	gl.VertexAttribPointer(location, size, xtype, false, int32(b.stride), offsetPtr)

@@ -47,11 +47,12 @@ func NewGeometry(capacity int) (out *Geometry) {
 	return
 }
 
-func (g *Geometry) Register(shaderID uint32, posName, texName, tileName string) {
+func (g *Geometry) Register(shaderID uint32, posName, texName, frameName string) {
 	var point Point
+	g.Bind()
 	g.vbo.Vec3(shaderID, posName, unsafe.Offsetof(point.Position), 0)
 	g.vbo.Vec2(shaderID, texName, unsafe.Offsetof(point.Texture), 0)
-	g.vbo.Float(shaderID, tileName, unsafe.Offsetof(point.Frame), 0)
+	g.vbo.Float(shaderID, frameName, unsafe.Offsetof(point.Frame), 0)
 }
 
 func (g *Geometry) Bind() {
@@ -70,4 +71,8 @@ func (g *Geometry) Upload() {
 		g.vbo.Upload(g.Points, len(g.Points)*int(g.stride))
 		g.Dirty = false
 	}
+}
+
+func (g *Geometry) UploadTo(vbo *common.ArrayBuffer) {
+	vbo.Upload(g.Points, len(g.Points)*int(g.stride))
 }
