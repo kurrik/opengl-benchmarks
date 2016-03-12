@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sheet
+package sprites
 
 type packingShelf struct {
 	x      int

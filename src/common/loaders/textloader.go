@@ -18,47 +18,47 @@ import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common/render"
-	"github.com/kurrik/opengl-benchmarks/common/sheet"
+	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"strings"
 )
 
 type TextMapping struct {
-	defaultRegion int
+	defaultSprite int
 	mapping       map[rune]int
-	regions       *sheet.Regions
+	sheet         *sprites.Sheet
 }
 
-func NewTextMapping(regions *sheet.Regions, defaultRegion string) (out *TextMapping, err error) {
+func NewTextMapping(sheet *sprites.Sheet, defaultSprite string) (out *TextMapping, err error) {
 	var (
-		region *sheet.Region
+		sprite *sprites.Sprite
 	)
 	out = &TextMapping{
-		regions: regions,
+		sheet:   sheet,
 		mapping: map[rune]int{},
 	}
-	if region, err = regions.Region(defaultRegion); err != nil {
+	if sprite, err = sheet.Sprite(defaultSprite); err != nil {
 		return
 	}
-	out.defaultRegion = region.Index()
+	out.defaultSprite = sprite.Index()
 	return
 
 }
 
 func (m *TextMapping) Set(r rune, key string) (err error) {
 	var (
-		region *sheet.Region
+		sprite *sprites.Sprite
 	)
-	if region, err = m.regions.Region(key); err != nil {
+	if sprite, err = m.sheet.Sprite(key); err != nil {
 		return
 	}
-	m.mapping[r] = region.Index()
+	m.mapping[r] = sprite.Index()
 	return
 }
 
 func (m *TextMapping) Get(r rune) (index int) {
 	var exists bool
 	if index, exists = m.mapping[r]; !exists {
-		index = m.defaultRegion
+		index = m.defaultSprite
 	}
 	return
 }
@@ -73,7 +73,7 @@ func NewTextLoader(mapping *TextMapping) *TextLoader {
 	}
 }
 
-func (l *TextLoader) addFrame(x, y float32, index int, scale float32, geo *render.Geometry) {
+func (l *TextLoader) add(x, y float32, index int, scale float32, geo *render.Geometry) {
 	var (
 		findex = float32(index)
 		unit   = scale
@@ -130,7 +130,7 @@ func (l *TextLoader) Load(renderer *render.Renderer, scale float32, grid string)
 	out = render.NewGeometry(len(lines) * len(lines[0]) * 6)
 	for y, line = range lines {
 		for x, char = range line {
-			l.addFrame(float32(x), float32(y), l.mapping.Get(char), scale, out)
+			l.add(float32(x), float32(y), l.mapping.Get(char), scale, out)
 		}
 	}
 	return

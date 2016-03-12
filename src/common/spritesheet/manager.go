@@ -16,7 +16,7 @@ package spritesheet
 
 import (
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/sheet"
+	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
 )
 
@@ -28,14 +28,14 @@ type Config struct {
 
 type Manager struct {
 	*tile.Manager
-	cfg     Config
-	regions *sheet.Regions
+	cfg   Config
+	sheet *sprites.Sheet
 }
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
 	var (
 		tileManager *tile.Manager
-		regions     *sheet.Regions
+		sheet       *sprites.Sheet
 		tp          TexturePacker
 	)
 	if tileManager, err = tile.NewManager(tile.Config{
@@ -43,53 +43,53 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	}); err != nil {
 		return
 	}
-	if regions, err = tp.LoadJSONArray(cfg.JsonPath); err != nil {
+	if sheet, err = tp.LoadJSONArray(cfg.JsonPath); err != nil {
 		return
 	}
 	mgr = &Manager{
 		Manager: tileManager,
 		cfg:     cfg,
-		regions: regions,
+		sheet:   sheet,
 	}
 	return
 }
 
 func (m *Manager) SetFrame(instance *tile.Instance, frame string) (err error) {
-	var r *sheet.Region
+	var s *sprites.Sprite
 	if instance == nil {
 		return // No error
 	}
-	if r, err = m.regions.Region(frame); err != nil {
+	if s, err = m.sheet.Sprite(frame); err != nil {
 		return
 	}
-	instance.Tile = r.Index()
-	instance.SetScale(r.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
+	instance.Tile = s.Index()
+	instance.SetScale(s.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
 	instance.Dirty = true
 	instance.Key = frame
 	return
 }
 
 func (m *Manager) Bind() {
-	m.regions.Bind()
+	m.sheet.Bind()
 	m.Manager.Bind()
 }
 
 func (m *Manager) Unbind() {
-	m.regions.Unbind()
+	m.sheet.Unbind()
 	m.Manager.Unbind()
 }
 
 func (m *Manager) Delete() {
-	m.regions.Delete()
-	m.regions = nil
+	m.sheet.Delete()
+	m.sheet = nil
 	m.Manager.Delete()
 }
 
 func (m *Manager) Render(camera *common.Camera) {
-	m.Manager.Render(camera, m.regions)
+	m.Manager.Render(camera, m.sheet)
 }
 
 // TODO: Refactor so that sheet can be shared between multiple renderers / managers.
-func (m *Manager) Regions() *sheet.Regions {
-	return m.regions
+func (m *Manager) Regions() *sprites.Sheet {
+	return m.sheet
 }

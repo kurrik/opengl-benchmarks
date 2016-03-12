@@ -12,42 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sheet
+package sprites
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
 	"image"
 )
 
-type Region struct {
+type Sprite struct {
 	index  int
 	bounds mgl32.Vec2
 	offset mgl32.Vec2
 }
 
-func (r *Region) Index() int {
-	return r.index
+func (s *Sprite) Index() int {
+	return s.index
 }
 
-func (r *Region) ImageBounds() image.Rectangle {
+func (s *Sprite) ImageBounds() image.Rectangle {
 	return image.Rectangle{
-		image.Point{int(r.offset.X()), int(r.offset.Y())},
-		image.Point{int(r.offset.X() + r.bounds.X()), int(r.offset.Y() + r.bounds.Y())},
+		image.Point{int(s.offset.X()), int(s.offset.Y())},
+		image.Point{int(s.offset.X() + s.bounds.X()), int(s.offset.Y() + s.bounds.Y())},
 	}
 }
 
-func (r *Region) textureBounds(textureBounds mgl32.Vec2) uniformRegion {
-	return newUniformRegion(
-		r.bounds.X()/textureBounds.X(),
-		r.bounds.Y()/textureBounds.Y(),
-		r.offset.X()/textureBounds.X(),
-		1.0-(r.offset.Y()+r.bounds.Y()-1.0)/textureBounds.Y(),
+func (s *Sprite) textureBounds(textureBounds mgl32.Vec2) uniformSprite {
+	return newUniformSprite(
+		s.bounds.X()/textureBounds.X(),
+		s.bounds.Y()/textureBounds.Y(),
+		s.offset.X()/textureBounds.X(),
+		1.0-(s.offset.Y()+s.bounds.Y()-1.0)/textureBounds.Y(),
 	)
 }
 
-func (r *Region) WorldDimensions(pxPerUnit float32) mgl32.Vec2 {
+func (s *Sprite) WorldDimensions(pxPerUnit float32) mgl32.Vec2 {
 	return mgl32.Vec2{
-		r.bounds.X() / pxPerUnit,
-		r.bounds.Y() / pxPerUnit,
+		s.bounds.X() / pxPerUnit,
+		s.bounds.Y() / pxPerUnit,
 	}
 }

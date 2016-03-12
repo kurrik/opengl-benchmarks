@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sheet
+package sprites
 
 import (
 	"fmt"
@@ -21,46 +21,46 @@ import (
 	"unsafe"
 )
 
-type Regions struct {
-	keys    map[string]*Region
+type Sheet struct {
+	keys    map[string]*Sprite
 	texture *common.Texture
 	Count   int
 }
 
-func NewRegions() *Regions {
-	return &Regions{
-		keys: map[string]*Region{},
+func NewSheet() *Sheet {
+	return &Sheet{
+		keys: map[string]*Sprite{},
 	}
 }
 
-func (s *Regions) SetTexture(texture *common.Texture) {
+func (s *Sheet) SetTexture(texture *common.Texture) {
 	s.Delete()
 	s.texture = texture
 }
 
-func (s *Regions) Bind() {
+func (s *Sheet) Bind() {
 	if s.texture != nil {
 		s.texture.Bind()
 	}
 }
 
-func (s *Regions) Unbind() {
+func (s *Sheet) Unbind() {
 	if s.texture != nil {
 		s.texture.Unbind()
 	}
 }
 
-func (s *Regions) Delete() {
+func (s *Sheet) Delete() {
 	if s.texture != nil {
 		s.texture.Delete()
 		s.texture = nil
 	}
 }
 
-func (s *Regions) AddRegion(key string, bounds, offset mgl32.Vec2) (out *Region) {
+func (s *Sheet) AddSprite(key string, bounds, offset mgl32.Vec2) (out *Sprite) {
 	var index int
 	index = s.Count
-	out = &Region{
+	out = &Sprite{
 		index:  index,
 		bounds: bounds,
 		offset: offset,
@@ -70,12 +70,12 @@ func (s *Regions) AddRegion(key string, bounds, offset mgl32.Vec2) (out *Region)
 	return
 }
 
-func (s *Regions) RegionExists(key string) (exists bool) {
+func (s *Sheet) Exists(key string) (exists bool) {
 	_, exists = s.keys[key]
 	return
 }
 
-func (s *Regions) Region(key string) (out *Region, err error) {
+func (s *Sheet) Sprite(key string) (out *Sprite, err error) {
 	var exists bool
 	if out, exists = s.keys[key]; !exists {
 		err = fmt.Errorf("Invalid tile key %v", key)
@@ -84,24 +84,24 @@ func (s *Regions) Region(key string) (out *Region, err error) {
 	return
 }
 
-func (s *Regions) Upload(ubo *common.UniformBuffer) (err error) {
+func (s *Sheet) Upload(ubo *common.UniformBuffer) (err error) {
 	var (
-		region *Region
-		entry  uniformRegion
-		data   = make([]uniformRegion, s.Count)
+		sprite *Sprite
+		entry  uniformSprite
+		data   = make([]uniformSprite, s.Count)
 		size   = s.Count * int(unsafe.Sizeof(entry))
 	)
 	if s.texture == nil {
 		err = fmt.Errorf("No texture associated with sheet")
 		return
 	}
-	for _, region = range s.keys {
-		data[region.index] = region.textureBounds(s.texture.Size)
+	for _, sprite = range s.keys {
+		data[sprite.index] = sprite.textureBounds(s.texture.Size)
 	}
 	ubo.Upload(data, size)
 	return
 }
 
-func (s *Regions) Texture() *common.Texture {
+func (s *Sheet) Texture() *common.Texture {
 	return s.texture
 }

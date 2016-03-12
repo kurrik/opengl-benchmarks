@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sheet
+package sprites
 
 import (
 	"fmt"
@@ -22,45 +22,45 @@ import (
 	"image/draw"
 )
 
-type PackedRegions struct {
-	*Regions
+type PackedSheet struct {
+	*Sheet
 	Width   int
 	Height  int
 	img     draw.Image
 	shelves []*packingShelf
 }
 
-func NewPackedRegions(w, h int) (i *PackedRegions) {
-	return &PackedRegions{
+func NewPackedSheet(w, h int) (i *PackedSheet) {
+	return &PackedSheet{
 		Width:   w,
 		Height:  h,
 		img:     image.NewRGBA(image.Rect(0, 0, w, h)),
 		shelves: []*packingShelf{newShelf()},
-		Regions:   NewRegions(),
+		Sheet:   NewSheet(),
 	}
 }
 
-func (s *PackedRegions) Image() image.Image {
+func (s *PackedSheet) Image() image.Image {
 	return s.img
 }
 
-func (s *PackedRegions) Pack(key string, img image.Image) (err error) {
-	return s.packRegion(key, img, img.Bounds())
+func (s *PackedSheet) Pack(key string, img image.Image) (err error) {
+	return s.packSprite(key, img, img.Bounds())
 }
 
-func (s *PackedRegions) Copy(key string, src *PackedRegions) (err error) {
+func (s *PackedSheet) Copy(key string, src *PackedSheet) (err error) {
 	var (
 		bounds image.Rectangle
-		region *Region
+		sprite *Sprite
 	)
-	if region, err = src.Region(key); err != nil {
+	if sprite, err = src.Sprite(key); err != nil {
 		return
 	}
-	bounds = region.ImageBounds()
-	return s.packRegion(key, src.img, bounds)
+	bounds = sprite.ImageBounds()
+	return s.packSprite(key, src.img, bounds)
 }
 
-func (s *PackedRegions) packRegion(key string, src image.Image, srcBounds image.Rectangle) (err error) {
+func (s *PackedSheet) packSprite(key string, src image.Image, srcBounds image.Rectangle) (err error) {
 	var (
 		j         int
 		shelf     *packingShelf
@@ -72,7 +72,7 @@ func (s *PackedRegions) packRegion(key string, src image.Image, srcBounds image.
 		h         int             = srcBounds.Max.Y - srcBounds.Min.Y
 		maxW      int             = texBounds.Max.X
 	)
-	if s.RegionExists(key) {
+	if s.Exists(key) {
 		// Don't need to pack since it's already in here
 		return
 	}
@@ -101,7 +101,7 @@ func (s *PackedRegions) packRegion(key string, src image.Image, srcBounds image.
 		destPt   = image.Pt(x, y)
 		destRect = image.Rectangle{destPt, destPt.Add(image.Pt(w, h))}
 	)
-	s.AddRegion(key, mgl32.Vec2{float32(w), float32(h)}, mgl32.Vec2{float32(x), float32(y)})
+	s.AddSprite(key, mgl32.Vec2{float32(w), float32(h)}, mgl32.Vec2{float32(x), float32(y)})
 	if glog.V(2) {
 		glog.Infof("packRegion(%v): dest %v src %v", key, destRect, srcBounds.Min)
 	}

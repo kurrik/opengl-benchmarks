@@ -19,7 +19,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/sheet"
+	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"unsafe"
 )
 
@@ -172,7 +172,7 @@ func (r *Renderer) draw(geometry *Geometry, count int) (err error) {
 
 func (r *Renderer) Render(
 	camera *common.Camera,
-	regions sheet.UniformBufferRegions,
+	sheet sprites.UniformBufferSheet,
 	geometry *Geometry,
 	instances *InstanceList,
 ) (err error) {
@@ -183,7 +183,7 @@ func (r *Renderer) Render(
 	)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	regions.Upload(r.ubo)
+	sheet.Upload(r.ubo)
 	geometry.Upload()
 	index = 0
 	instance = instances.Head()

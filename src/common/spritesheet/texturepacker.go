@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/sheet"
+	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"io/ioutil"
 	"path"
 )
@@ -60,7 +60,7 @@ type texturePackerJSONArray struct {
 type TexturePacker struct {
 }
 
-func (p TexturePacker) LoadJSONArray(jsonPath string) (regions *sheet.Regions, err error) {
+func (p TexturePacker) LoadJSONArray(jsonPath string) (sheet *sprites.Sheet, err error) {
 	var (
 		dir         string
 		data        []byte
@@ -71,7 +71,7 @@ func (p TexturePacker) LoadJSONArray(jsonPath string) (regions *sheet.Regions, e
 	if data, err = ioutil.ReadFile(jsonPath); err != nil {
 		return
 	}
-	if regions, texturePath, err = p.ParseJSONArray(string(data)); err != nil {
+	if sheet, texturePath, err = p.ParseJSONArray(string(data)); err != nil {
 		return
 	}
 	if texture, err = common.LoadTexture(
@@ -80,11 +80,11 @@ func (p TexturePacker) LoadJSONArray(jsonPath string) (regions *sheet.Regions, e
 	); err != nil {
 		return
 	}
-	regions.SetTexture(texture)
+	sheet.SetTexture(texture)
 	return
 }
 
-func (p TexturePacker) ParseJSONArray(contents string) (regions *sheet.Regions, texturePath string, err error) {
+func (p TexturePacker) ParseJSONArray(contents string) (sheet *sprites.Sheet, texturePath string, err error) {
 	var (
 		parsed texturePackerJSONArray
 	)
@@ -92,9 +92,9 @@ func (p TexturePacker) ParseJSONArray(contents string) (regions *sheet.Regions, 
 		return
 	}
 	texturePath = parsed.Meta.Image // TODO: Load texture and add directly to sheet.
-	regions = sheet.NewRegions()
+	sheet = sprites.NewSheet()
 	for _, frame := range parsed.Frames {
-		regions.AddRegion(
+		sheet.AddSprite(
 			frame.Filename,
 			mgl32.Vec2{
 				float32(frame.Frame.W),

@@ -17,7 +17,7 @@ package text
 import (
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/sheet"
+	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"image/draw"
 )
@@ -31,8 +31,8 @@ type Config struct {
 
 type Manager struct {
 	*tile.Manager
-	cfg     Config
-	regions *sheet.PackedRegions
+	cfg   Config
+	sheet *sprites.PackedSheet
 }
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
@@ -47,7 +47,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	mgr = &Manager{
 		cfg:     cfg,
 		Manager: tileManager,
-		regions: sheet.NewPackedRegions(
+		sheet: sprites.NewPackedSheet(
 			cfg.TextureWidth,
 			cfg.TextureHeight,
 		),
@@ -58,7 +58,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) (err error) {
 	var (
 		img    draw.Image
-		region *sheet.Region
+		sprite *sprites.Sprite
 	)
 	if instance == nil {
 		return // No error.
@@ -66,20 +66,20 @@ func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) 
 	if img, err = font.GetImage(text); err != nil {
 		return
 	}
-	if err = m.regions.Pack(text, img); err != nil {
+	if err = m.sheet.Pack(text, img); err != nil {
 		// Attempt to compact the texture.
 		if err = m.repackImage(); err != nil {
 			return
 		}
-		if err = m.regions.Pack(text, img); err != nil {
+		if err = m.sheet.Pack(text, img); err != nil {
 			return
 		}
 	}
-	if region, err = m.regions.Regions.Region(text); err != nil {
+	if sprite, err = m.sheet.Sprite(text); err != nil {
 		return
 	}
-	instance.Tile = region.Index()
-	instance.SetScale(region.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
+	instance.Tile = sprite.Index()
+	instance.SetScale(sprite.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
 	instance.Dirty = true
 	instance.Key = text
 	if err = m.generateTexture(); err != nil {
@@ -93,41 +93,41 @@ func (m *Manager) generateTexture() (err error) {
 		texture *common.Texture
 	)
 	if texture, err = common.GetTexture(
-		m.regions.Image(),
+		m.sheet.Image(),
 		common.SmoothingLinear,
 	); err != nil {
 		return
 	}
-	m.regions.SetTexture(texture)
+	m.sheet.SetTexture(texture)
 	return
 }
 
 func (m *Manager) repackImage() (err error) {
 	var (
-		newImage *sheet.PackedRegions
+		newImage *sprites.PackedSheet
 		instance *tile.Instance
-		region   *sheet.Region
+		sprite   *sprites.Sprite
 	)
 	if glog.V(1) {
 		glog.Info("Repacking image")
 	}
-	newImage = sheet.NewPackedRegions(
-		m.regions.Width,
-		m.regions.Height,
+	newImage = sprites.NewPackedSheet(
+		m.sheet.Width,
+		m.sheet.Height,
 	)
 	instance = m.Instances.Head()
 	for instance != nil {
-		if err = newImage.Copy(instance.Key, m.regions); err != nil {
+		if err = newImage.Copy(instance.Key, m.sheet); err != nil {
 			return
 		}
-		if region, err = newImage.Regions.Region(instance.Key); err != nil {
+		if sprite, err = newImage.Sheet.Sprite(instance.Key); err != nil {
 			return
 		}
-		instance.Tile = region.Index()
+		instance.Tile = sprite.Index()
 		instance.Dirty = true
 		instance = instance.Next()
 	}
-	m.regions = newImage
+	m.sheet = newImage
 	if err = m.generateTexture(); err != nil {
 		return
 	}
@@ -138,26 +138,26 @@ func (m *Manager) repackImage() (err error) {
 }
 
 func (m *Manager) Bind() {
-	m.regions.Bind()
+	m.sheet.Bind()
 	m.Manager.Bind()
 }
 
 func (m *Manager) Unbind() {
-	m.regions.Unbind()
+	m.sheet.Unbind()
 	m.Manager.Unbind()
 }
 
 func (m *Manager) Delete() {
-	m.regions.Delete()
+	m.sheet.Delete()
 	m.Manager.Delete()
-	m.regions = nil
+	m.sheet = nil
 	m.Manager = nil
 }
 
 func (m *Manager) Render(camera *common.Camera) {
-	m.Manager.Render(camera, m.regions)
+	m.Manager.Render(camera, m.sheet)
 }
 
-func (m *Manager) Regions() *sheet.PackedRegions {
-	return m.regions
+func (m *Manager) Regions() *sprites.PackedSheet {
+	return m.sheet
 }
