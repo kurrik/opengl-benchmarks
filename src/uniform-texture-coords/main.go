@@ -20,7 +20,6 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
-	// "github.com/kurrik/opengl-benchmarks/common/batch"
 	"github.com/kurrik/opengl-benchmarks/common/loaders"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
@@ -139,11 +138,6 @@ func main() {
 	if renderer, err = render.NewRenderer(100); err != nil {
 		panic(err)
 	}
-	/*
-		if textMapping, err = batch.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
-			panic(err)
-		}
-	*/
 	if textMapping, err = loaders.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
 		panic(err)
 	}
