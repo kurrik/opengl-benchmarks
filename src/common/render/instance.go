@@ -25,6 +25,7 @@ type Instance struct {
 	rotation float32
 	Frame    int
 	Key      string // TODO: move to an interface{} data pointer.
+	color    mgl32.Vec4
 	dirty    bool
 	next     *Instance
 	prev     *Instance
@@ -34,6 +35,7 @@ func NewInstance() *Instance {
 	return &Instance{
 		scale:    mgl32.Vec3{1.0, 1.0, 1.0},
 		position: mgl32.Vec3{0.0, 0.0, 0.0},
+		color:    mgl32.Vec4{0.0, 0.0, 0.0, 0.0},
 		rotation: 0,
 		dirty:    true,
 	}
@@ -76,6 +78,18 @@ func (i *Instance) GetModel() mgl32.Mat4 {
 	return i.model
 }
 
+func (i *Instance) Color() mgl32.Vec4 {
+	return i.color
+}
+
+func (i *Instance) SetColor(r, g, b, a float32) {
+	i.color[0] = r
+	i.color[1] = g
+	i.color[2] = b
+	i.color[3] = a
+	i.dirty = true
+}
+
 func (i *Instance) Next() *Instance {
 	return i.next
 }
@@ -104,7 +118,7 @@ func (i *Instance) InsertAfter(inst *Instance) {
 }
 
 func (i *Instance) MarkChanged() {
-	i.dirty = true;
+	i.dirty = true
 }
 
 type InstanceList struct {

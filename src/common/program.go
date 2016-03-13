@@ -177,6 +177,10 @@ func (a *VertexAttribute) Vec3(offset uintptr, divisor uint32) {
 	a.vertexAttrib(0, 3, gl.FLOAT, offset, divisor)
 }
 
+func (a *VertexAttribute) Vec4(offset uintptr, divisor uint32) {
+	a.vertexAttrib(0, 4, gl.FLOAT, offset, divisor)
+}
+
 func (a *VertexAttribute) Mat4(offset uintptr, divisor uint32) {
 	var (
 		float    float32

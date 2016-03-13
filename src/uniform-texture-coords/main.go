@@ -166,15 +166,15 @@ func main() {
 		spriteMgr.Render(camera)
 		spriteMgr.Unbind()
 
-		framerate.Bind()
-		framerate.Render(camera)
-		framerate.Unbind()
-
 		textMgr.Bind()
 		textMgr.Render(camera)
 		textMgr.Unbind()
 
 		renderer.Unbind()
+
+		framerate.Bind()
+		framerate.Render(camera)
+		framerate.Unbind()
 
 		context.SwapBuffers()
 

@@ -30,12 +30,13 @@ precision mediump float;
 in vec2 v_TexturePos;
 in vec2 v_TextureMin;
 in vec2 v_TextureDim;
+in vec4 v_BaseColor;
 uniform sampler2D u_Texture;
 out vec4 v_FragData;
 
 void main() {
   vec2 v_TexturePosition = v_TextureMin + mod(v_TexturePos, v_TextureDim);
-  v_FragData = texture(u_Texture, v_TexturePosition);
+  v_FragData = clamp(texture(u_Texture, v_TexturePosition) + v_BaseColor, 0.0, 1.0);
 }`
 
 const VERTEX = `#version 150
@@ -54,24 +55,28 @@ in vec3 v_Position;
 in vec2 v_Texture;
 in float f_VertexFrame;
 in float f_InstanceFrame;
+in vec4 v_Color;
 in mat4 m_Model;
 uniform mat4 m_View;
 uniform mat4 m_Projection;
 out vec2 v_TexturePos;
 out vec2 v_TextureMin;
 out vec2 v_TextureDim;
+out vec4 v_BaseColor;
 
 void main() {
   Tile t_Tile = Tiles[int(f_VertexFrame + f_InstanceFrame)];
   v_TextureMin = t_Tile.texture.zw;
   v_TextureDim = t_Tile.texture.xy;
   v_TexturePos = v_Texture * v_TextureDim;
+  v_BaseColor = v_Color;
   gl_Position = m_Projection * m_View * m_Model * vec4(v_Position, 1.0);
 }`
 
 type renderInstance struct {
 	model mgl32.Mat4
 	frame float32
+	color mgl32.Vec4
 }
 
 type Renderer struct {
@@ -107,6 +112,7 @@ func NewRenderer(bufferSize int) (r *Renderer, err error) {
 
 	r.shader.Attrib("f_InstanceFrame", instanceStride).Float(unsafe.Offsetof(instance.frame), 1)
 	r.shader.Attrib("m_Model", instanceStride).Mat4(unsafe.Offsetof(instance.model), 1)
+	r.shader.Attrib("v_Color", instanceStride).Vec4(unsafe.Offsetof(instance.color), 1)
 
 	r.uView = r.shader.Uniform("m_View")
 	r.uProj = r.shader.Uniform("m_Projection")
@@ -185,6 +191,7 @@ func (r *Renderer) Render(
 		i = &r.buffer[index]
 		i.frame = float32(instance.Frame)
 		i.model = instance.GetModel()
+		i.color = instance.Color()
 		index++
 		instance = instance.Next()
 		if index >= r.bufferSize {
