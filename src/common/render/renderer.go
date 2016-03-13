@@ -121,12 +121,11 @@ func (r *Renderer) Bind() {
 	r.shader.Bind()
 }
 
-func (r *Renderer) Register(geometry *Geometry) {
+func (r *Renderer) register(geometry *Geometry) {
 	var (
 		pt       Point
 		ptStride = unsafe.Sizeof(pt)
 	)
-	r.shader.Bind()
 	geometry.Bind()
 	r.shader.Attrib("v_Position", ptStride).Vec3(unsafe.Offsetof(pt.Position), 0)
 	r.shader.Attrib("v_Texture", ptStride).Vec2(unsafe.Offsetof(pt.Texture), 0)
@@ -178,9 +177,8 @@ func (r *Renderer) Render(
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
 	sheet.Upload(r.ubo)
-	geometry.Bind()
 	geometry.Upload()
-	r.Register(geometry)
+	r.register(geometry)
 	index = 0
 	instance = instances.Head()
 	for instance != nil {
