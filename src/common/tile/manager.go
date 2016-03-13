@@ -17,74 +17,37 @@ package tile
 import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/sprites"
 )
 
-type Config struct {
-	MaxInstances uint32
-}
-
 type Manager struct {
-	cfg               Config
-	renderer          *Renderer
-	Instances         InstanceList
-	rendererInstances []rInstance
-	count             int
+	Instances render.InstanceList
+	count     int
+	geometry  *render.Geometry
+	renderer  *render.Renderer
 }
 
-func NewManager(cfg Config) (mgr *Manager, err error) {
+func NewManager(renderer *render.Renderer) (mgr *Manager, err error) {
 	mgr = &Manager{
-		cfg:               cfg,
-		rendererInstances: make([]rInstance, cfg.MaxInstances),
-		count:             0,
-	}
-	if mgr.renderer, err = NewRenderer(); err != nil {
-		return
+		count:    0,
+		renderer: renderer,
+		geometry: render.NewGeometryFromPoints(render.Square),
 	}
 	return
 }
 
-func (m *Manager) CreateInstance() (inst *Instance, err error) {
-	inst = NewInstance()
+func (m *Manager) CreateInstance() (inst *render.Instance, err error) {
+	inst = render.NewInstance()
 	inst.SetPosition(mgl32.Vec3{0, 0, 0})
 	inst.SetScale(mgl32.Vec3{1.0, 1.0, 1.0})
 	inst.SetRotation(0)
-	inst.Tile = 0
+	inst.Frame = 0
 	m.Instances.Prepend(inst)
 	m.count += 1
 	return
 }
 
-func (m *Manager) Bind() {
-	m.renderer.Bind()
-}
-
-func (m *Manager) Unbind() {
-	m.renderer.Unbind()
-}
-
-func (m *Manager) Delete() {
-	m.renderer.Delete()
-}
-
 func (m *Manager) Render(camera *common.Camera, sheet sprites.UniformBufferSheet) {
-	var (
-		inst  *Instance
-		rinst *rInstance
-		index int
-	)
-	index = 0
-	inst = m.Instances.Head()
-	for inst != nil {
-		if uint32(index) >= m.cfg.MaxInstances {
-			m.renderer.Render(camera, index, m.rendererInstances, sheet)
-			index = 0
-		}
-		rinst = &m.rendererInstances[index]
-		rinst.tile = float32(inst.Tile)
-		rinst.model = inst.GetModel()
-		index++
-		inst = inst.Next()
-	}
-	m.renderer.Render(camera, index, m.rendererInstances, sheet)
+	m.renderer.Render(camera, sheet, m.geometry, &m.Instances)
 }

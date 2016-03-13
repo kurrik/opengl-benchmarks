@@ -16,6 +16,7 @@ package spritesheet
 
 import (
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
 )
@@ -24,6 +25,7 @@ type Config struct {
 	JsonPath      string
 	PixelsPerUnit float32
 	MaxInstances  uint32
+	Renderer      *render.Renderer
 }
 
 type Manager struct {
@@ -38,9 +40,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 		sheet       *sprites.Sheet
 		tp          TexturePacker
 	)
-	if tileManager, err = tile.NewManager(tile.Config{
-		MaxInstances: cfg.MaxInstances,
-	}); err != nil {
+	if tileManager, err = tile.NewManager(cfg.Renderer); err != nil {
 		return
 	}
 	if sheet, err = tp.LoadJSONArray(cfg.JsonPath); err != nil {
@@ -54,7 +54,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	return
 }
 
-func (m *Manager) SetFrame(instance *tile.Instance, frame string) (err error) {
+func (m *Manager) SetFrame(instance *render.Instance, frame string) (err error) {
 	var s *sprites.Sprite
 	if instance == nil {
 		return // No error
@@ -62,27 +62,24 @@ func (m *Manager) SetFrame(instance *tile.Instance, frame string) (err error) {
 	if s, err = m.sheet.Sprite(frame); err != nil {
 		return
 	}
-	instance.Tile = s.Index()
+	instance.Frame = s.Index()
 	instance.SetScale(s.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
-	instance.Dirty = true
+	instance.MarkChanged()
 	instance.Key = frame
 	return
 }
 
 func (m *Manager) Bind() {
 	m.sheet.Bind()
-	m.Manager.Bind()
 }
 
 func (m *Manager) Unbind() {
 	m.sheet.Unbind()
-	m.Manager.Unbind()
 }
 
 func (m *Manager) Delete() {
 	m.sheet.Delete()
 	m.sheet = nil
-	m.Manager.Delete()
 }
 
 func (m *Manager) Render(camera *common.Camera) {

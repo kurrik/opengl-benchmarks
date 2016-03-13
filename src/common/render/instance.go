@@ -24,6 +24,7 @@ type Instance struct {
 	scale    mgl32.Vec3
 	rotation float32
 	Frame    int
+	Key      string // TODO: move to an interface{} data pointer.
 	dirty    bool
 	next     *Instance
 	prev     *Instance
@@ -100,6 +101,10 @@ func (i *Instance) InsertAfter(inst *Instance) {
 	inst.next = i.next
 	inst.prev = i
 	i.next = inst
+}
+
+func (i *Instance) MarkChanged() {
+	i.dirty = true;
 }
 
 type InstanceList struct {

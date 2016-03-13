@@ -61,24 +61,6 @@ out vec2 v_TexturePos;
 out vec2 v_TextureMin;
 out vec2 v_TextureDim;
 
-const vec2 WorldPoints[] = vec2[6](
-  vec2(-0.5, -0.5),
-  vec2( 0.5,  0.5),
-  vec2(-0.5,  0.5),
-  vec2(-0.5, -0.5),
-  vec2( 0.5, -0.5),
-  vec2( 0.5,  0.5)
-);
-
-const vec2 TexturePoints[] = vec2[6](
-  vec2(0.0, 0.0),
-  vec2(1.0, 1.0),
-  vec2(0.0, 1.0),
-  vec2(0.0, 0.0),
-  vec2(1.0, 0.0),
-  vec2(1.0, 1.0)
-);
-
 void main() {
   Tile t_Tile = Tiles[int(f_VertexFrame + f_InstanceFrame)];
   v_TextureMin = t_Tile.texture.zw;
@@ -118,13 +100,17 @@ func NewRenderer(bufferSize int) (r *Renderer, err error) {
 		return
 	}
 	r.shader.Bind()
-	r.vbo = common.NewArrayBuffer(instanceStride)
-	r.vbo.Float(r.shader.ID(), "f_InstanceFrame", unsafe.Offsetof(instance.frame), 1)
-	r.vbo.Mat4(r.shader.ID(), "m_Model", unsafe.Offsetof(instance.model), 1)
+
+	r.vbo = common.NewArrayBuffer()
 	r.ubo = common.NewUniformBuffer(r.shader.ID())
 	r.ubo.BlockBinding("TextureData", 1)
+
+	r.shader.Attrib("f_InstanceFrame", instanceStride).Float(unsafe.Offsetof(instance.frame), 1)
+	r.shader.Attrib("m_Model", instanceStride).Mat4(unsafe.Offsetof(instance.model), 1)
+
 	r.uView = r.shader.Uniform("m_View")
 	r.uProj = r.shader.Uniform("m_Projection")
+
 	if e := gl.GetError(); e != 0 {
 		err = fmt.Errorf("ERROR: OpenGL error %X", e)
 	}
@@ -136,7 +122,15 @@ func (r *Renderer) Bind() {
 }
 
 func (r *Renderer) Register(geometry *Geometry) {
-	geometry.Register(r.shader.ID(), "v_Position", "v_Texture", "f_VertexFrame")
+	var (
+		pt       Point
+		ptStride = unsafe.Sizeof(pt)
+	)
+	r.shader.Bind()
+	geometry.Bind()
+	r.shader.Attrib("v_Position", ptStride).Vec3(unsafe.Offsetof(pt.Position), 0)
+	r.shader.Attrib("v_Texture", ptStride).Vec2(unsafe.Offsetof(pt.Texture), 0)
+	r.shader.Attrib("f_VertexFrame", ptStride).Float(unsafe.Offsetof(pt.Frame), 0)
 }
 
 func (r *Renderer) Unbind() {
@@ -184,16 +178,18 @@ func (r *Renderer) Render(
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
 	sheet.Upload(r.ubo)
+	geometry.Bind()
 	geometry.Upload()
+	r.Register(geometry)
 	index = 0
 	instance = instances.Head()
-	if instance != nil {
+	for instance != nil {
 		i = &r.buffer[index]
 		i.frame = float32(instance.Frame)
 		i.model = instance.GetModel()
 		index++
 		instance = instance.Next()
-		if index >= r.bufferSize-1 {
+		if index >= r.bufferSize {
 			if err = r.draw(geometry, index); err != nil {
 				return
 			}

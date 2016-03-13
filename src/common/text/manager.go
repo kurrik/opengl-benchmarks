@@ -17,6 +17,7 @@ package text
 import (
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"image/draw"
@@ -27,6 +28,7 @@ type Config struct {
 	TextureWidth  int
 	TextureHeight int
 	PixelsPerUnit float32
+	Renderer      *render.Renderer
 }
 
 type Manager struct {
@@ -39,9 +41,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	var (
 		tileManager *tile.Manager
 	)
-	if tileManager, err = tile.NewManager(tile.Config{
-		MaxInstances: cfg.MaxInstances,
-	}); err != nil {
+	if tileManager, err = tile.NewManager(cfg.Renderer); err != nil {
 		return
 	}
 	mgr = &Manager{
@@ -55,7 +55,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	return
 }
 
-func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) (err error) {
+func (m *Manager) SetText(instance *render.Instance, text string, font *FontFace) (err error) {
 	var (
 		img    draw.Image
 		sprite *sprites.Sprite
@@ -78,9 +78,9 @@ func (m *Manager) SetText(instance *tile.Instance, text string, font *FontFace) 
 	if sprite, err = m.sheet.Sprite(text); err != nil {
 		return
 	}
-	instance.Tile = sprite.Index()
+	instance.Frame = sprite.Index()
 	instance.SetScale(sprite.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
-	instance.Dirty = true
+	instance.MarkChanged()
 	instance.Key = text
 	if err = m.generateTexture(); err != nil {
 		return
@@ -105,7 +105,7 @@ func (m *Manager) generateTexture() (err error) {
 func (m *Manager) repackImage() (err error) {
 	var (
 		newImage *sprites.PackedSheet
-		instance *tile.Instance
+		instance *render.Instance
 		sprite   *sprites.Sprite
 	)
 	if glog.V(1) {
@@ -123,8 +123,8 @@ func (m *Manager) repackImage() (err error) {
 		if sprite, err = newImage.Sheet.Sprite(instance.Key); err != nil {
 			return
 		}
-		instance.Tile = sprite.Index()
-		instance.Dirty = true
+		instance.Frame = sprite.Index()
+		instance.MarkChanged()
 		instance = instance.Next()
 	}
 	m.sheet = newImage
@@ -139,19 +139,15 @@ func (m *Manager) repackImage() (err error) {
 
 func (m *Manager) Bind() {
 	m.sheet.Bind()
-	m.Manager.Bind()
 }
 
 func (m *Manager) Unbind() {
 	m.sheet.Unbind()
-	m.Manager.Unbind()
 }
 
 func (m *Manager) Delete() {
 	m.sheet.Delete()
-	m.Manager.Delete()
 	m.sheet = nil
-	m.Manager = nil
 }
 
 func (m *Manager) Render(camera *common.Camera) {

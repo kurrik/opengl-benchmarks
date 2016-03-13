@@ -17,7 +17,7 @@ package common
 import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
-	"unsafe"
+	//"unsafe"
 )
 
 type Buffer interface {
@@ -86,54 +86,11 @@ func (b *UniformBuffer) Upload(data interface{}, size int) {
 
 type ArrayBuffer struct {
 	*GLBuffer
-	stride    uintptr
 }
 
-func NewArrayBuffer(stride uintptr) (b *ArrayBuffer) {
+func NewArrayBuffer() (b *ArrayBuffer) {
 	b = &ArrayBuffer{
-		GLBuffer:  NewGLBuffer(gl.ARRAY_BUFFER),
-		stride:    stride,
+		GLBuffer: NewGLBuffer(gl.ARRAY_BUFFER),
 	}
 	return
-}
-
-func (b *ArrayBuffer) vertexAttrib(location uint32, size int32, xtype uint32, offset uintptr, divisor uint32) {
-	b.Bind()
-	var offsetPtr = gl.PtrOffset(int(offset))
-	gl.EnableVertexAttribArray(location)
-	gl.VertexAttribPointer(location, size, xtype, false, int32(b.stride), offsetPtr)
-	gl.VertexAttribDivisor(location, divisor)
-}
-
-func (b *ArrayBuffer) VertexAttrib(programID uint32, name string, size int32, xtype uint32, offset uintptr, divisor uint32) {
-	var (
-		nameStr  = gl.Str(fmt.Sprintf("%v\x00", name))
-		location = uint32(gl.GetAttribLocation(programID, nameStr))
-	)
-	b.vertexAttrib(location, size, xtype, offset, divisor)
-}
-
-func (b *ArrayBuffer) Float(programID uint32, name string, offset uintptr, divisor uint32) {
-	b.VertexAttrib(programID, name, 1, gl.FLOAT, offset, divisor)
-}
-
-func (b *ArrayBuffer) Vec2(programID uint32, name string, offset uintptr, divisor uint32) {
-	b.VertexAttrib(programID, name, 2, gl.FLOAT, offset, divisor)
-}
-
-func (b *ArrayBuffer) Vec3(programID uint32, name string, offset uintptr, divisor uint32) {
-	b.VertexAttrib(programID, name, 3, gl.FLOAT, offset, divisor)
-}
-
-func (b *ArrayBuffer) Mat4(programID uint32, name string, offset uintptr, divisor uint32) {
-	var (
-		float    float32
-		sizeVec4 = unsafe.Sizeof(float) * 4
-		nameStr  = gl.Str(fmt.Sprintf("%v\x00", name))
-		location = uint32(gl.GetAttribLocation(programID, nameStr))
-	)
-	b.vertexAttrib(location, 4, gl.FLOAT, offset, divisor)
-	b.vertexAttrib(location+1, 4, gl.FLOAT, offset+sizeVec4, divisor)
-	b.vertexAttrib(location+2, 4, gl.FLOAT, offset+2*sizeVec4, divisor)
-	b.vertexAttrib(location+3, 4, gl.FLOAT, offset+3*sizeVec4, divisor)
 }

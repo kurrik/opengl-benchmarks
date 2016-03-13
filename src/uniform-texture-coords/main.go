@@ -24,7 +24,6 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
-	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"github.com/kurrik/opengl-benchmarks/common/util"
 	"image/color"
 	"runtime"
@@ -67,7 +66,7 @@ func main() {
 		bg          = color.RGBA{0, 0, 0, 255}
 		textMgr     *text.Manager
 		err         error
-		inst        *tile.Instance
+		inst        *render.Instance
 		rot         int = 0
 		textMapping *loaders.TextMapping
 		textLoader  *loaders.TextLoader
@@ -87,10 +86,8 @@ func main() {
 		JsonPath:      "src/resources/spritesheet.json",
 		PixelsPerUnit: PixelsPerUnit,
 		MaxInstances:  100,
+		Renderer:      renderer,
 	}); err != nil {
-		panic(err)
-	}
-	if framerate, err = util.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}
 	if textMgr, err = text.NewManager(text.Config{
@@ -98,7 +95,11 @@ func main() {
 		TextureWidth:  512,
 		TextureHeight: 512,
 		PixelsPerUnit: PixelsPerUnit,
+		Renderer:      renderer,
 	}); err != nil {
+		panic(err)
+	}
+	if framerate, err = util.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}
 	if camera, err = context.Camera(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{6.4, 4.8, 2}); err != nil {
@@ -120,10 +121,10 @@ func main() {
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
 		inst.SetRotation(s.R)
 	}
-
 	for _, s := range []Inst{
 		Inst{Key: "numbered_squares_01", X: 0, Y: 0, R: 0},
-		Inst{Key: "numbered_squares_02", X: -2.0, Y: -2.0, R: -15},
+		Inst{Key: "numbered_squares_02", X: -1.5, Y: -1.5, R: -15},
+		Inst{Key: "numbered_squares_03", X: -2.0, Y: -2.0, R: -30},
 	} {
 		if inst, err = spriteMgr.CreateInstance(); err != nil {
 			panic(err)
@@ -135,9 +136,6 @@ func main() {
 		inst.SetRotation(s.R)
 	}
 
-	if renderer, err = render.NewRenderer(100); err != nil {
-		panic(err)
-	}
 	if textMapping, err = loaders.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
 		panic(err)
 	}
@@ -147,10 +145,13 @@ func main() {
 	if batchData, err = textLoader.Load(renderer, 1, BATCH); err != nil {
 		panic(err)
 	}
-	//fmt.Printf("Sheet: %v\n", sprites.Tiles)
-	//fmt.Printf("BatchData: %v\n", batchData)
-	//fmt.Printf("Framerate: %v\n", framerate)
-	renderer.Register(batchData)
+
+	// fmt.Printf("Sheet: %v\n", sprites.Tiles)
+	// fmt.Printf("BatchData: %v\n", batchData)
+	// fmt.Printf("Framerate: %v\n", framerate)
+	// fmt.Printf("TextLoader: %v\n", textLoader)
+	// fmt.Printf("Font: %v\n", font)
+
 	for !context.ShouldClose() {
 		context.Events.Poll()
 		context.Clear()
@@ -160,7 +161,6 @@ func main() {
 		instanceList := render.NewInstanceList()
 		instanceList.Prepend(render.NewInstance())
 		renderer.Render(camera, spriteMgr.Regions(), batchData, instanceList)
-		renderer.Unbind()
 
 		spriteMgr.Bind()
 		spriteMgr.Render(camera)
@@ -173,6 +173,8 @@ func main() {
 		textMgr.Bind()
 		textMgr.Render(camera)
 		textMgr.Unbind()
+
+		renderer.Unbind()
 
 		context.SwapBuffers()
 

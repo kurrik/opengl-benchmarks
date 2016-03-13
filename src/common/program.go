@@ -19,6 +19,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"strings"
+	"unsafe"
 )
 
 type Uniform struct {
@@ -72,6 +73,14 @@ func (p *Program) Uniform(name string) *Uniform {
 	var nameStr = gl.Str(fmt.Sprintf("%v\x00", name))
 	return &Uniform{
 		location: gl.GetUniformLocation(p.ID(), nameStr),
+	}
+}
+
+func (p *Program) Attrib(name string, stride uintptr) *VertexAttribute {
+	var nameStr = gl.Str(fmt.Sprintf("%v\x00", name))
+	return &VertexAttribute{
+		location: uint32(gl.GetAttribLocation(p.program, nameStr)),
+		stride:   stride,
 	}
 }
 
@@ -142,4 +151,39 @@ func (p *Program) buildProgram(vsrc string, fsrc string) (err error) {
 	}
 	p.program, err = p.linkProgram(vertex, fragment)
 	return
+}
+
+type VertexAttribute struct {
+	location uint32
+	stride   uintptr
+}
+
+func (a *VertexAttribute) vertexAttrib(l uint32, size int32, xtype uint32, offset uintptr, divisor uint32) {
+	var offsetPtr = gl.PtrOffset(int(offset))
+	gl.EnableVertexAttribArray(a.location + l)
+	gl.VertexAttribPointer(a.location+l, size, xtype, false, int32(a.stride), offsetPtr)
+	gl.VertexAttribDivisor(a.location+l, divisor)
+}
+
+func (a *VertexAttribute) Float(offset uintptr, divisor uint32) {
+	a.vertexAttrib(0, 1, gl.FLOAT, offset, divisor)
+}
+
+func (a *VertexAttribute) Vec2(offset uintptr, divisor uint32) {
+	a.vertexAttrib(0, 2, gl.FLOAT, offset, divisor)
+}
+
+func (a *VertexAttribute) Vec3(offset uintptr, divisor uint32) {
+	a.vertexAttrib(0, 3, gl.FLOAT, offset, divisor)
+}
+
+func (a *VertexAttribute) Mat4(offset uintptr, divisor uint32) {
+	var (
+		float    float32
+		sizeVec4 = unsafe.Sizeof(float) * 4
+	)
+	a.vertexAttrib(0, 4, gl.FLOAT, offset, divisor)
+	a.vertexAttrib(1, 4, gl.FLOAT, offset+sizeVec4, divisor)
+	a.vertexAttrib(2, 4, gl.FLOAT, offset+2*sizeVec4, divisor)
+	a.vertexAttrib(3, 4, gl.FLOAT, offset+3*sizeVec4, divisor)
 }

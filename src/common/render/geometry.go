@@ -26,6 +26,39 @@ type Point struct {
 	Frame    float32
 }
 
+var Square = []Point{
+	Point{
+		Position: mgl32.Vec3{-0.5, -0.5, 0},
+		Texture:  mgl32.Vec2{0, 0},
+		Frame:    0,
+	},
+	Point{
+		Position: mgl32.Vec3{0.5, 0.5, 0},
+		Texture:  mgl32.Vec2{1, 1},
+		Frame:    0,
+	},
+	Point{
+		Position: mgl32.Vec3{-0.5, 0.5, 0},
+		Texture:  mgl32.Vec2{0, 1},
+		Frame:    0,
+	},
+	Point{
+		Position: mgl32.Vec3{-0.5, -0.5, 0},
+		Texture:  mgl32.Vec2{0, 0},
+		Frame:    0,
+	},
+	Point{
+		Position: mgl32.Vec3{0.5, -0.5, 0},
+		Texture:  mgl32.Vec2{1, 0},
+		Frame:    0,
+	},
+	Point{
+		Position: mgl32.Vec3{0.5, 0.5, 0},
+		Texture:  mgl32.Vec2{1, 1},
+		Frame:    0,
+	},
+}
+
 type Geometry struct {
 	Points []Point
 	Dirty  bool
@@ -42,17 +75,15 @@ func NewGeometry(capacity int) (out *Geometry) {
 		Points: make([]Point, 0, capacity),
 		Dirty:  true,
 		stride: stride,
-		vbo:    common.NewArrayBuffer(stride),
+		vbo:    common.NewArrayBuffer(),
 	}
 	return
 }
 
-func (g *Geometry) Register(shaderID uint32, posName, texName, frameName string) {
-	var point Point
-	g.Bind()
-	g.vbo.Vec3(shaderID, posName, unsafe.Offsetof(point.Position), 0)
-	g.vbo.Vec2(shaderID, texName, unsafe.Offsetof(point.Texture), 0)
-	g.vbo.Float(shaderID, frameName, unsafe.Offsetof(point.Frame), 0)
+func NewGeometryFromPoints(points []Point) (out *Geometry) {
+	out = NewGeometry(len(points))
+	out.Points = append(out.Points, points...)
+	return
 }
 
 func (g *Geometry) Bind() {
@@ -71,8 +102,4 @@ func (g *Geometry) Upload() {
 		g.vbo.Upload(g.Points, len(g.Points)*int(g.stride))
 		g.Dirty = false
 	}
-}
-
-func (g *Geometry) UploadTo(vbo *common.ArrayBuffer) {
-	vbo.Upload(g.Points, len(g.Points)*int(g.stride))
 }
