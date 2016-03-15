@@ -22,6 +22,7 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/resources"
+	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
 	"github.com/kurrik/opengl-benchmarks/common/util"
@@ -59,6 +60,7 @@ func main() {
 	var (
 		context     *common.Context
 		spriteMgr   *spritesheet.Manager
+		sheet       *sprites.Sheet
 		camera      *common.Camera
 		framerate   *util.Framerate
 		font        *text.FontFace
@@ -69,10 +71,11 @@ func main() {
 		inst        *render.Instance
 		rot         int = 0
 		textMapping *resources.TextMapping
-		textLoader  *resources.TextLoader
 		batchData   *render.Geometry
 		renderer    *render.Renderer
+		resourceMgr *resources.Manager
 	)
+	resourceMgr = resources.NewManager()
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
 	}
@@ -82,8 +85,28 @@ func main() {
 	if renderer, err = render.NewRenderer(100); err != nil {
 		panic(err)
 	}
+
+	if err = resourceMgr.Load(
+		resources.NewTexturePackerLoader("sheet", "src/resources/spritesheet.json", common.SmoothingNearest),
+	); err != nil {
+		panic(err)
+	}
+	sheet = resourceMgr.GetSheet("sheet")
+
+	if textMapping, err = resources.NewTextMapping(sheet, "numbered_squares_03"); err != nil {
+		panic(err)
+	}
+	textMapping.Set('A', "numbered_squares_01")
+	textMapping.Set('B', "numbered_squares_tall_16")
+	if err = resourceMgr.Load(
+		resources.NewTextLoader("batch", textMapping, 1, BATCH),
+	); err != nil {
+		panic(err)
+	}
+	batchData = resourceMgr.GetGeometry("batch")
+
 	if spriteMgr, err = spritesheet.NewManager(spritesheet.Config{
-		JsonPath:      "src/resources/spritesheet.json",
+		Sheet:         sheet,
 		PixelsPerUnit: PixelsPerUnit,
 		MaxInstances:  100,
 		Renderer:      renderer,
@@ -136,16 +159,6 @@ func main() {
 		inst.SetRotation(s.R)
 	}
 
-	if textMapping, err = resources.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
-		panic(err)
-	}
-	textMapping.Set('A', "numbered_squares_01")
-	textMapping.Set('B', "numbered_squares_tall_16")
-	textLoader = resources.NewTextLoader(textMapping)
-	if batchData, err = textLoader.Load(renderer, 1, BATCH); err != nil {
-		panic(err)
-	}
-
 	// fmt.Printf("Sheet: %v\n", sprites.Tiles)
 	// fmt.Printf("BatchData: %v\n", batchData)
 	// fmt.Printf("Framerate: %v\n", framerate)
@@ -157,10 +170,11 @@ func main() {
 		context.Clear()
 
 		renderer.Bind()
-		spriteMgr.Regions().Texture().Bind()
+		sheet.Bind()
+
 		instanceList := render.NewInstanceList()
 		instanceList.Prepend(render.NewInstance())
-		renderer.Render(camera, spriteMgr.Regions(), batchData, instanceList)
+		renderer.Render(camera, sheet, batchData, instanceList)
 
 		spriteMgr.Bind()
 		spriteMgr.Render(camera)

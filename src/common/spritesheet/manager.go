@@ -22,7 +22,7 @@ import (
 )
 
 type Config struct {
-	JsonPath      string
+	Sheet         *sprites.Sheet
 	PixelsPerUnit float32
 	MaxInstances  uint32
 	Renderer      *render.Renderer
@@ -30,26 +30,19 @@ type Config struct {
 
 type Manager struct {
 	*tile.Manager
-	cfg   Config
-	sheet *sprites.Sheet
+	cfg Config
 }
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
 	var (
 		tileManager *tile.Manager
-		sheet       *sprites.Sheet
-		tp          TexturePacker
 	)
 	if tileManager, err = tile.NewManager(cfg.Renderer); err != nil {
-		return
-	}
-	if sheet, err = tp.LoadJSONArray(cfg.JsonPath); err != nil {
 		return
 	}
 	mgr = &Manager{
 		Manager: tileManager,
 		cfg:     cfg,
-		sheet:   sheet,
 	}
 	return
 }
@@ -59,7 +52,7 @@ func (m *Manager) SetFrame(instance *render.Instance, frame string) (err error) 
 	if instance == nil {
 		return // No error
 	}
-	if s, err = m.sheet.Sprite(frame); err != nil {
+	if s, err = m.cfg.Sheet.Sprite(frame); err != nil {
 		return
 	}
 	instance.Frame = s.Index()
@@ -70,23 +63,18 @@ func (m *Manager) SetFrame(instance *render.Instance, frame string) (err error) 
 }
 
 func (m *Manager) Bind() {
-	m.sheet.Bind()
+	m.cfg.Sheet.Bind()
 }
 
 func (m *Manager) Unbind() {
-	m.sheet.Unbind()
+	m.cfg.Sheet.Unbind()
 }
 
 func (m *Manager) Delete() {
-	m.sheet.Delete()
-	m.sheet = nil
+	m.cfg.Sheet.Delete()
+	m.cfg.Sheet = nil
 }
 
 func (m *Manager) Render(camera *common.Camera) {
-	m.Manager.Render(camera, m.sheet)
-}
-
-// TODO: Refactor so that sheet can be shared between multiple renderers / managers.
-func (m *Manager) Regions() *sprites.Sheet {
-	return m.sheet
+	m.Manager.Render(camera, m.cfg.Sheet)
 }

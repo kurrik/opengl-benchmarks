@@ -65,11 +65,17 @@ func (m *TextMapping) Get(r rune) (index int) {
 
 type TextLoader struct {
 	mapping *TextMapping
+	scale   float32
+	grid    string
+	key     string
 }
 
-func NewTextLoader(mapping *TextMapping) *TextLoader {
+func NewTextLoader(key string, mapping *TextMapping, scale float32, grid string) *TextLoader {
 	return &TextLoader{
+		key:     key,
 		mapping: mapping,
+		scale:   scale,
+		grid:    grid,
 	}
 }
 
@@ -114,24 +120,26 @@ func (l *TextLoader) add(x, y float32, index int, scale float32, geo *render.Geo
 	}...)
 }
 
-func (l *TextLoader) Load(renderer *render.Renderer, scale float32, grid string) (out *render.Geometry, err error) {
+func (l *TextLoader) Load(m *Manager) (err error) {
 	var (
-		lines []string
-		line  string
-		char  rune
-		y     int
-		x     int
+		lines    []string
+		line     string
+		char     rune
+		y        int
+		x        int
+		geometry *render.Geometry
 	)
-	lines = strings.Split(strings.TrimSpace(grid), "\n")
+	lines = strings.Split(strings.TrimSpace(l.grid), "\n")
 	if len(lines) == 0 {
 		err = fmt.Errorf("No lines in input data")
 		return
 	}
-	out = render.NewGeometry(len(lines) * len(lines[0]) * 6)
+	geometry = render.NewGeometry(len(lines) * len(lines[0]) * 6)
 	for y, line = range lines {
 		for x, char = range line {
-			l.add(float32(x), float32(y), l.mapping.Get(char), scale, out)
+			l.add(float32(x), float32(y), l.mapping.Get(char), l.scale, geometry)
 		}
 	}
+	m.SetGeometry(l.key, geometry)
 	return
 }

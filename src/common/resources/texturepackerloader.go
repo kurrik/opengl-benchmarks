@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spritesheet
+package resources
 
 import (
 	"encoding/json"
@@ -57,41 +57,36 @@ type texturePackerJSONArray struct {
 	Meta   texturePackerMeta    `json:meta`
 }
 
-type TexturePacker struct {
+type TexturePackerLoader struct {
+	key       string
+	path      string
+	smoothing common.TextureSmoothing
 }
 
-func (p TexturePacker) LoadJSONArray(jsonPath string) (sheet *sprites.Sheet, err error) {
+func NewTexturePackerLoader(key, path string, smoothing common.TextureSmoothing) *TexturePackerLoader {
+	return &TexturePackerLoader{
+		key:       key,
+		path:      path,
+		smoothing: smoothing,
+	}
+}
+
+func (l *TexturePackerLoader) Load(m *Manager) (err error) {
 	var (
 		dir         string
 		data        []byte
 		texture     *common.Texture
 		texturePath string
+		sheet       *sprites.Sheet
+		parsed      texturePackerJSONArray
 	)
-	dir = path.Dir(jsonPath)
-	if data, err = ioutil.ReadFile(jsonPath); err != nil {
+	dir = path.Dir(l.path)
+	if data, err = ioutil.ReadFile(l.path); err != nil {
 		return
 	}
-	if sheet, texturePath, err = p.ParseJSONArray(string(data)); err != nil {
+	if err = json.Unmarshal([]byte(data), &parsed); err != nil {
 		return
 	}
-	if texture, err = common.LoadTexture(
-		path.Join(dir, texturePath),
-		common.SmoothingNearest,
-	); err != nil {
-		return
-	}
-	sheet.SetTexture(texture)
-	return
-}
-
-func (p TexturePacker) ParseJSONArray(contents string) (sheet *sprites.Sheet, texturePath string, err error) {
-	var (
-		parsed texturePackerJSONArray
-	)
-	if err = json.Unmarshal([]byte(contents), &parsed); err != nil {
-		return
-	}
-	texturePath = parsed.Meta.Image // TODO: Load texture and add directly to sheet.
 	sheet = sprites.NewSheet()
 	for _, frame := range parsed.Frames {
 		sheet.AddSprite(
@@ -106,5 +101,12 @@ func (p TexturePacker) ParseJSONArray(contents string) (sheet *sprites.Sheet, te
 			},
 		)
 	}
+	texturePath = path.Join(dir, parsed.Meta.Image)
+	if texture, err = common.LoadTexture(texturePath, l.smoothing); err != nil {
+		return
+	}
+	sheet.SetTexture(texture)
+	m.SetTexture(texturePath, texture)
+	m.SetSheet(l.key, sheet)
 	return
 }
