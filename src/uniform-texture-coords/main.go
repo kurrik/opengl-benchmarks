@@ -20,8 +20,8 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/loaders"
 	"github.com/kurrik/opengl-benchmarks/common/render"
+	"github.com/kurrik/opengl-benchmarks/common/resources"
 	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
 	"github.com/kurrik/opengl-benchmarks/common/util"
@@ -68,8 +68,8 @@ func main() {
 		err         error
 		inst        *render.Instance
 		rot         int = 0
-		textMapping *loaders.TextMapping
-		textLoader  *loaders.TextLoader
+		textMapping *resources.TextMapping
+		textLoader  *resources.TextLoader
 		batchData   *render.Geometry
 		renderer    *render.Renderer
 	)
@@ -136,12 +136,12 @@ func main() {
 		inst.SetRotation(s.R)
 	}
 
-	if textMapping, err = loaders.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
+	if textMapping, err = resources.NewTextMapping(spriteMgr.Regions(), "numbered_squares_03"); err != nil {
 		panic(err)
 	}
 	textMapping.Set('A', "numbered_squares_01")
 	textMapping.Set('B', "numbered_squares_tall_16")
-	textLoader = loaders.NewTextLoader(textMapping)
+	textLoader = resources.NewTextLoader(textMapping)
 	if batchData, err = textLoader.Load(renderer, 1, BATCH); err != nil {
 		panic(err)
 	}
