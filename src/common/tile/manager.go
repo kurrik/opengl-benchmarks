@@ -18,7 +18,6 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/render"
-	"github.com/kurrik/opengl-benchmarks/common/sprites"
 )
 
 type Manager struct {
@@ -48,6 +47,6 @@ func (m *Manager) CreateInstance() (inst *render.Instance, err error) {
 	return
 }
 
-func (m *Manager) Render(camera *common.Camera, sheet sprites.UniformBufferSheet) {
+func (m *Manager) Render(camera *common.Camera, sheet render.UniformBufferSheet) {
 	m.renderer.Render(camera, sheet, m.geometry, &m.Instances)
 }

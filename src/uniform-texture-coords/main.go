@@ -23,7 +23,6 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/resources"
 	"github.com/kurrik/opengl-benchmarks/common/sprites"
-	"github.com/kurrik/opengl-benchmarks/common/spritesheet"
 	"github.com/kurrik/opengl-benchmarks/common/text"
 	"github.com/kurrik/opengl-benchmarks/common/util"
 	"image/color"
@@ -59,7 +58,7 @@ func main() {
 
 	var (
 		context     *common.Context
-		spriteMgr   *spritesheet.Manager
+		spriteMgr   *sprites.Manager
 		sheet       *sprites.Sheet
 		camera      *common.Camera
 		framerate   *util.Framerate
@@ -105,7 +104,7 @@ func main() {
 	}
 	batchData = resourceMgr.GetGeometry("batch")
 
-	if spriteMgr, err = spritesheet.NewManager(spritesheet.Config{
+	if spriteMgr, err = sprites.NewManager(sprites.Config{
 		Sheet:         sheet,
 		PixelsPerUnit: PixelsPerUnit,
 		MaxInstances:  100,

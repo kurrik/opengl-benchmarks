@@ -16,6 +16,7 @@ package sprites
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/kurrik/opengl-benchmarks/common/render"
 	"image"
 )
 
@@ -36,8 +37,8 @@ func (s *Sprite) ImageBounds() image.Rectangle {
 	}
 }
 
-func (s *Sprite) textureBounds(textureBounds mgl32.Vec2) uniformSprite {
-	return newUniformSprite(
+func (s *Sprite) textureBounds(textureBounds mgl32.Vec2) render.UniformSprite {
+	return render.NewUniformSprite(
 		s.bounds.X()/textureBounds.X(),
 		s.bounds.Y()/textureBounds.Y(),
 		s.offset.X()/textureBounds.X(),

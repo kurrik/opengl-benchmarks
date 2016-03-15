@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spritesheet
+package sprites
 
 import (
+	"fmt"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/render"
-	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
 )
 
 type Config struct {
-	Sheet         *sprites.Sheet
+	Sheet         *Sheet
 	PixelsPerUnit float32
 	MaxInstances  uint32
 	Renderer      *render.Renderer
@@ -34,9 +34,11 @@ type Manager struct {
 }
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
-	var (
-		tileManager *tile.Manager
-	)
+	var tileManager *tile.Manager
+	if cfg.Sheet == nil {
+		err = fmt.Errorf("Sheet must not be nil")
+		return
+	}
 	if tileManager, err = tile.NewManager(cfg.Renderer); err != nil {
 		return
 	}
@@ -48,7 +50,7 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 }
 
 func (m *Manager) SetFrame(instance *render.Instance, frame string) (err error) {
-	var s *sprites.Sprite
+	var s *Sprite
 	if instance == nil {
 		return // No error
 	}

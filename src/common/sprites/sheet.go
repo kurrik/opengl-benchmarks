@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/render"
 	"unsafe"
 )
 
@@ -87,8 +88,8 @@ func (s *Sheet) Sprite(key string) (out *Sprite, err error) {
 func (s *Sheet) Upload(ubo *common.UniformBuffer) (err error) {
 	var (
 		sprite *Sprite
-		entry  uniformSprite
-		data   = make([]uniformSprite, s.Count)
+		entry  render.UniformSprite
+		data   = make([]render.UniformSprite, s.Count)
 		size   = s.Count * int(unsafe.Sizeof(entry))
 	)
 	if s.texture == nil {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sprites
+package render
 
 import (
 	"github.com/kurrik/opengl-benchmarks/common"
@@ -22,8 +22,8 @@ type UniformBufferSheet interface {
 	Upload(ubo *common.UniformBuffer) (err error)
 }
 
-type uniformSprite [4]float32
+type UniformSprite [4]float32
 
-func newUniformSprite(texW, texH, texX, texY float32) uniformSprite {
-	return uniformSprite{texW, texH, texX, texY}
+func NewUniformSprite(texW, texH, texX, texY float32) UniformSprite {
+	return UniformSprite{texW, texH, texX, texY}
 }

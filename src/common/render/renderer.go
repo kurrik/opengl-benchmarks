@@ -19,7 +19,6 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
-	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"unsafe"
 )
 
@@ -171,7 +170,7 @@ func (r *Renderer) draw(geometry *Geometry, count int) (err error) {
 
 func (r *Renderer) Render(
 	camera *common.Camera,
-	sheet sprites.UniformBufferSheet,
+	sheet UniformBufferSheet,
 	geometry *Geometry,
 	instances *InstanceList,
 ) (err error) {
