@@ -15,14 +15,11 @@
 package sprites
 
 import (
-	"fmt"
-	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/tile"
 )
 
 type Config struct {
-	Sheet         *Sheet
 	PixelsPerUnit float32
 	MaxInstances  uint32
 	Renderer      *render.Renderer
@@ -35,10 +32,6 @@ type Manager struct {
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
 	var tileManager *tile.Manager
-	if cfg.Sheet == nil {
-		err = fmt.Errorf("Sheet must not be nil")
-		return
-	}
 	if tileManager, err = tile.NewManager(cfg.Renderer); err != nil {
 		return
 	}
@@ -49,12 +42,12 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 	return
 }
 
-func (m *Manager) SetFrame(instance *render.Instance, frame string) (err error) {
+func (m *Manager) SetFrame(instance *render.Instance, sheet *Sheet, frame string) (err error) {
 	var s *Sprite
 	if instance == nil {
 		return // No error
 	}
-	if s, err = m.cfg.Sheet.Sprite(frame); err != nil {
+	if s, err = sheet.Sprite(frame); err != nil {
 		return
 	}
 	instance.Frame = s.Index()
@@ -62,21 +55,4 @@ func (m *Manager) SetFrame(instance *render.Instance, frame string) (err error) 
 	instance.MarkChanged()
 	instance.Key = frame
 	return
-}
-
-func (m *Manager) Bind() {
-	m.cfg.Sheet.Bind()
-}
-
-func (m *Manager) Unbind() {
-	m.cfg.Sheet.Unbind()
-}
-
-func (m *Manager) Delete() {
-	m.cfg.Sheet.Delete()
-	m.cfg.Sheet = nil
-}
-
-func (m *Manager) Render(camera *common.Camera) {
-	m.Manager.Render(camera, m.cfg.Sheet)
 }

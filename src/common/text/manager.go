@@ -33,8 +33,9 @@ type Config struct {
 
 type Manager struct {
 	*tile.Manager
-	cfg   Config
-	sheet *sprites.PackedSheet
+	Instances *render.InstanceList
+	cfg       Config
+	sheet     *sprites.PackedSheet
 }
 
 func NewManager(cfg Config) (mgr *Manager, err error) {
@@ -45,8 +46,9 @@ func NewManager(cfg Config) (mgr *Manager, err error) {
 		return
 	}
 	mgr = &Manager{
-		cfg:     cfg,
-		Manager: tileManager,
+		Instances: render.NewInstanceList(),
+		cfg:       cfg,
+		Manager:   tileManager,
 		sheet: sprites.NewPackedSheet(
 			cfg.TextureWidth,
 			cfg.TextureHeight,
@@ -148,10 +150,6 @@ func (m *Manager) Unbind() {
 func (m *Manager) Delete() {
 	m.sheet.Delete()
 	m.sheet = nil
-}
-
-func (m *Manager) Render(camera *common.Camera) {
-	m.Manager.Render(camera, m.sheet)
 }
 
 func (m *Manager) Regions() *sprites.PackedSheet {

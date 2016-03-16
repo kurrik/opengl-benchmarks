@@ -15,12 +15,10 @@
 package tile
 
 import (
-	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 )
 
 type Manager struct {
-	Instances render.InstanceList
 	count     int
 	geometry  *render.Geometry
 	renderer  *render.Renderer
@@ -35,6 +33,3 @@ func NewManager(renderer *render.Renderer) (mgr *Manager, err error) {
 	return
 }
 
-func (m *Manager) Render(camera *common.Camera, sheet render.UniformBufferSheet) {
-	m.renderer.Render(camera, sheet, m.geometry, &m.Instances)
-}

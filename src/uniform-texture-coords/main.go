@@ -73,7 +73,6 @@ func main() {
 		batchData       *render.Geometry
 		renderer        *render.Renderer
 		resourceMgr     *resources.Manager
-		textInstances   *render.InstanceList
 		spriteInstances *render.InstanceList
 		batchInstances  *render.InstanceList
 		square          *render.Geometry
@@ -108,7 +107,6 @@ func main() {
 	}
 	batchData = resourceMgr.GetGeometry("batch")
 
-	textInstances = render.NewInstanceList()
 	spriteInstances = render.NewInstanceList()
 	batchInstances = render.NewInstanceList()
 
@@ -117,7 +115,6 @@ func main() {
 	square = render.NewGeometryFromPoints(render.Square)
 
 	if spriteMgr, err = sprites.NewManager(sprites.Config{
-		Sheet:         sheet,
 		PixelsPerUnit: PixelsPerUnit,
 		MaxInstances:  100,
 		Renderer:      renderer,
@@ -146,7 +143,7 @@ func main() {
 		Inst{Key: "This is text!", X: 0, Y: -1.0, R: 0},
 		Inst{Key: "More text!", X: 1.0, Y: 1.0, R: 15},
 	} {
-		inst = textInstances.NewInstance()
+		inst = textMgr.Instances.NewInstance()
 		if err = textMgr.SetText(inst, s.Key, font); err != nil {
 			panic(err)
 		}
@@ -159,7 +156,7 @@ func main() {
 		Inst{Key: "numbered_squares_03", X: -2.0, Y: -2.0, R: -30},
 	} {
 		inst = spriteInstances.NewInstance()
-		if err = spriteMgr.SetFrame(inst, s.Key); err != nil {
+		if err = spriteMgr.SetFrame(inst, sheet, s.Key); err != nil {
 			panic(err)
 		}
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
@@ -181,14 +178,10 @@ func main() {
 
 		renderer.Render(camera, sheet, batchData, batchInstances)
 
-		spriteMgr.Bind()
 		renderer.Render(camera, sheet, square, spriteInstances)
-		//spriteMgr.Render(camera)
-		spriteMgr.Unbind()
 
 		textMgr.Bind()
-		//textMgr.Render(camera)
-		renderer.Render(camera, textMgr.Regions(), square, textInstances)
+		renderer.Render(camera, textMgr.Regions(), square, textMgr.Instances)
 		textMgr.Unbind()
 
 		renderer.Unbind()
@@ -199,7 +192,7 @@ func main() {
 
 		context.SwapBuffers()
 
-		if err = textMgr.SetText(textInstances.Head(), fmt.Sprintf("Rotation %v", rot%100), font); err != nil {
+		if err = textMgr.SetText(textMgr.Instances.Head(), fmt.Sprintf("Rotation %v", rot%100), font); err != nil {
 			fmt.Printf("ERROR: %v\n", err)
 			break
 		}
