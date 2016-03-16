@@ -16,30 +16,16 @@ package sprites
 
 import (
 	"github.com/kurrik/opengl-benchmarks/common/render"
-	"github.com/kurrik/opengl-benchmarks/common/tile"
 )
 
-type Config struct {
-	PixelsPerUnit float32
-	MaxInstances  uint32
-	Renderer      *render.Renderer
-}
-
 type Manager struct {
-	*tile.Manager
-	cfg Config
+	pixelsPerUnit float32
 }
 
-func NewManager(cfg Config) (mgr *Manager, err error) {
-	var tileManager *tile.Manager
-	if tileManager, err = tile.NewManager(cfg.Renderer); err != nil {
-		return
+func NewManager(pixelsPerUnit float32) *Manager {
+	return &Manager{
+		pixelsPerUnit: pixelsPerUnit,
 	}
-	mgr = &Manager{
-		Manager: tileManager,
-		cfg:     cfg,
-	}
-	return
 }
 
 func (m *Manager) SetFrame(instance *render.Instance, sheet *Sheet, frame string) (err error) {
@@ -51,7 +37,7 @@ func (m *Manager) SetFrame(instance *render.Instance, sheet *Sheet, frame string
 		return
 	}
 	instance.Frame = s.Index()
-	instance.SetScale(s.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
+	instance.SetScale(s.WorldDimensions(m.pixelsPerUnit).Vec3(1.0))
 	instance.MarkChanged()
 	instance.Key = frame
 	return

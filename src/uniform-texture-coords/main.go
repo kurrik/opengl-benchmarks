@@ -114,22 +114,12 @@ func main() {
 
 	square = render.NewGeometryFromPoints(render.Square)
 
-	if spriteMgr, err = sprites.NewManager(sprites.Config{
-		PixelsPerUnit: PixelsPerUnit,
-		MaxInstances:  100,
-		Renderer:      renderer,
-	}); err != nil {
-		panic(err)
-	}
-	if textMgr, err = text.NewManager(text.Config{
-		MaxInstances:  100,
+	spriteMgr = sprites.NewManager(PixelsPerUnit)
+	textMgr = text.NewManager(text.Config{
 		TextureWidth:  512,
 		TextureHeight: 512,
 		PixelsPerUnit: PixelsPerUnit,
-		Renderer:      renderer,
-	}); err != nil {
-		panic(err)
-	}
+	})
 	if framerate, err = util.NewFramerateRenderer(); err != nil {
 		panic(err)
 	}

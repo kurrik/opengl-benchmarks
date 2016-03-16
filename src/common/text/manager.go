@@ -19,42 +19,30 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/sprites"
-	"github.com/kurrik/opengl-benchmarks/common/tile"
 	"image/draw"
 )
 
 type Config struct {
-	MaxInstances  uint32
 	TextureWidth  int
 	TextureHeight int
 	PixelsPerUnit float32
-	Renderer      *render.Renderer
 }
 
 type Manager struct {
-	*tile.Manager
 	Instances *render.InstanceList
 	cfg       Config
 	sheet     *sprites.PackedSheet
 }
 
-func NewManager(cfg Config) (mgr *Manager, err error) {
-	var (
-		tileManager *tile.Manager
-	)
-	if tileManager, err = tile.NewManager(cfg.Renderer); err != nil {
-		return
-	}
-	mgr = &Manager{
+func NewManager(cfg Config) *Manager {
+	return &Manager{
 		Instances: render.NewInstanceList(),
 		cfg:       cfg,
-		Manager:   tileManager,
 		sheet: sprites.NewPackedSheet(
 			cfg.TextureWidth,
 			cfg.TextureHeight,
 		),
 	}
-	return
 }
 
 func (m *Manager) SetText(instance *render.Instance, text string, font *FontFace) (err error) {
