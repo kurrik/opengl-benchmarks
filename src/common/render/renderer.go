@@ -79,14 +79,14 @@ type renderInstance struct {
 }
 
 type Renderer struct {
-	shader     *common.Program
-	vbo        *common.ArrayBuffer
-	ubo        *common.UniformBuffer
-	uView      *common.Uniform
-	uProj      *common.Uniform
-	bufferSize int
-	buffer     []renderInstance
-	stride     uintptr
+	shader      *common.Program
+	vbo         *common.ArrayBuffer
+	textureData *common.UniformBlock
+	uView       *common.Uniform
+	uProj       *common.Uniform
+	bufferSize  int
+	buffer      []renderInstance
+	stride      uintptr
 }
 
 func NewRenderer(bufferSize int) (r *Renderer, err error) {
@@ -106,12 +106,12 @@ func NewRenderer(bufferSize int) (r *Renderer, err error) {
 	r.shader.Bind()
 
 	r.vbo = common.NewArrayBuffer()
-	r.ubo = common.NewUniformBuffer(r.shader.ID())
-	r.ubo.BlockBinding("TextureData", 1)
 
 	r.shader.Attrib("f_InstanceFrame", instanceStride).Float(unsafe.Offsetof(instance.frame), 1)
 	r.shader.Attrib("m_Model", instanceStride).Mat4(unsafe.Offsetof(instance.model), 1)
 	r.shader.Attrib("v_Color", instanceStride).Vec4(unsafe.Offsetof(instance.color), 1)
+
+	r.textureData = r.shader.UniformBlock("TextureData", 1)
 
 	r.uView = r.shader.Uniform("m_View")
 	r.uProj = r.shader.Uniform("m_Projection")
@@ -126,15 +126,20 @@ func (r *Renderer) Bind() {
 	r.shader.Bind()
 }
 
-func (r *Renderer) register(geometry *Geometry) {
+func (r *Renderer) registerGeometry(geometry *Geometry) {
 	var (
 		pt       Point
 		ptStride = unsafe.Sizeof(pt)
 	)
 	geometry.Bind()
+	geometry.Upload()
 	r.shader.Attrib("v_Position", ptStride).Vec3(unsafe.Offsetof(pt.Position), 0)
 	r.shader.Attrib("v_Texture", ptStride).Vec2(unsafe.Offsetof(pt.Texture), 0)
 	r.shader.Attrib("f_VertexFrame", ptStride).Float(unsafe.Offsetof(pt.Frame), 0)
+}
+
+func (r *Renderer) registerTextureData(buffer UniformBufferSheet) {
+	r.textureData.Bind(buffer.BufferID(), buffer.Size())
 }
 
 func (r *Renderer) Unbind() {
@@ -145,10 +150,6 @@ func (r *Renderer) Delete() {
 	if r.shader != nil {
 		r.shader.Delete()
 		r.shader = nil
-	}
-	if r.ubo != nil {
-		r.ubo.Delete()
-		r.ubo = nil
 	}
 	if r.vbo != nil {
 		r.vbo.Delete()
@@ -181,9 +182,8 @@ func (r *Renderer) Render(
 	)
 	r.uView.Mat4(camera.View)
 	r.uProj.Mat4(camera.Projection)
-	sheet.Upload(r.ubo)
-	geometry.Upload()
-	r.register(geometry)
+	r.registerGeometry(geometry)
+	r.registerTextureData(sheet)
 	index = 0
 	instance = instances.Head()
 	for instance != nil {

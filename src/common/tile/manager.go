@@ -15,7 +15,6 @@
 package tile
 
 import (
-	"github.com/go-gl/mathgl/mgl32"
 	"github.com/kurrik/opengl-benchmarks/common"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 )
@@ -33,17 +32,6 @@ func NewManager(renderer *render.Renderer) (mgr *Manager, err error) {
 		renderer: renderer,
 		geometry: render.NewGeometryFromPoints(render.Square),
 	}
-	return
-}
-
-func (m *Manager) CreateInstance() (inst *render.Instance, err error) {
-	inst = render.NewInstance()
-	inst.SetPosition(mgl32.Vec3{0, 0, 0})
-	inst.SetScale(mgl32.Vec3{1.0, 1.0, 1.0})
-	inst.SetRotation(0)
-	inst.Frame = 0
-	m.Instances.Prepend(inst)
-	m.count += 1
 	return
 }
 

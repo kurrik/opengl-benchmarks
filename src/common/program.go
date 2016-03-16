@@ -76,6 +76,17 @@ func (p *Program) Uniform(name string) *Uniform {
 	}
 }
 
+func (p *Program) UniformBlock(name string, binding uint32) *UniformBlock {
+	var (
+		nameStr = gl.Str(fmt.Sprintf("%v\x00", name))
+		index   = uint32(gl.GetUniformBlockIndex(p.program, nameStr))
+	)
+	gl.UniformBlockBinding(p.program, index, binding)
+	return &UniformBlock{
+		binding: binding,
+	}
+}
+
 func (p *Program) Attrib(name string, stride uintptr) *VertexAttribute {
 	var nameStr = gl.Str(fmt.Sprintf("%v\x00", name))
 	return &VertexAttribute{
@@ -151,6 +162,14 @@ func (p *Program) buildProgram(vsrc string, fsrc string) (err error) {
 	}
 	p.program, err = p.linkProgram(vertex, fragment)
 	return
+}
+
+type UniformBlock struct {
+	binding uint32
+}
+
+func (b *UniformBlock) Bind(bufferID uint32, size int) {
+	gl.BindBufferRange(gl.UNIFORM_BUFFER, b.binding, bufferID, 0, size)
 }
 
 type VertexAttribute struct {

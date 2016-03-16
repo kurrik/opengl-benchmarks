@@ -23,19 +23,25 @@ import (
 )
 
 type Sheet struct {
-	keys    map[string]*Sprite
-	texture *common.Texture
-	Count   int
+	keys            map[string]*Sprite
+	texture         *common.Texture
+	ubo             *common.UniformBuffer
+	Count           int
+	version         int
+	uploadedVersion int
 }
 
 func NewSheet() *Sheet {
 	return &Sheet{
-		keys: map[string]*Sprite{},
+		keys:            map[string]*Sprite{},
+		version:         0,
+		uploadedVersion: -1,
+		ubo:             common.NewUniformBuffer(),
 	}
 }
 
 func (s *Sheet) SetTexture(texture *common.Texture) {
-	s.Delete()
+	s.deleteTexture()
 	s.texture = texture
 }
 
@@ -43,6 +49,7 @@ func (s *Sheet) Bind() {
 	if s.texture != nil {
 		s.texture.Bind()
 	}
+	s.upload()
 }
 
 func (s *Sheet) Unbind() {
@@ -51,10 +58,18 @@ func (s *Sheet) Unbind() {
 	}
 }
 
-func (s *Sheet) Delete() {
+func (s *Sheet) deleteTexture() {
 	if s.texture != nil {
 		s.texture.Delete()
 		s.texture = nil
+	}
+}
+
+func (s *Sheet) Delete() {
+	s.deleteTexture()
+	if s.ubo != nil {
+		s.ubo.Delete()
+		s.ubo = nil
 	}
 }
 
@@ -68,6 +83,7 @@ func (s *Sheet) AddSprite(key string, bounds, offset mgl32.Vec2) (out *Sprite) {
 	}
 	s.keys[key] = out
 	s.Count++
+	s.version++
 	return
 }
 
@@ -85,7 +101,10 @@ func (s *Sheet) Sprite(key string) (out *Sprite, err error) {
 	return
 }
 
-func (s *Sheet) Upload(ubo *common.UniformBuffer) (err error) {
+func (s *Sheet) upload() (err error) {
+	if s.version == s.uploadedVersion {
+		return
+	}
 	var (
 		sprite *Sprite
 		entry  render.UniformSprite
@@ -99,10 +118,19 @@ func (s *Sheet) Upload(ubo *common.UniformBuffer) (err error) {
 	for _, sprite = range s.keys {
 		data[sprite.index] = sprite.textureBounds(s.texture.Size)
 	}
-	ubo.Upload(data, size)
+	s.ubo.Upload(data, size)
+	s.uploadedVersion = s.version
 	return
 }
 
 func (s *Sheet) Texture() *common.Texture {
 	return s.texture
+}
+
+func (s *Sheet) BufferID() uint32 {
+	return s.ubo.BufferID()
+}
+
+func (s *Sheet) Size() int {
+	return s.ubo.Size()
 }

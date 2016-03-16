@@ -15,16 +15,14 @@
 package common
 
 import (
-	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
-	//"unsafe"
 )
 
 type Buffer interface {
 }
 
 type GLBuffer struct {
-	ID          uint32
+	id          uint32
 	bufferBytes int
 	target      uint32
 }
@@ -33,17 +31,21 @@ func NewGLBuffer(target uint32) (b *GLBuffer) {
 	b = &GLBuffer{
 		target: target,
 	}
-	gl.GenBuffers(1, &b.ID)
+	gl.GenBuffers(1, &b.id)
 	b.Bind()
 	return
 }
 
+func (b *GLBuffer) BufferID() uint32 {
+	return b.id
+}
+
 func (b *GLBuffer) Bind() {
-	gl.BindBuffer(b.target, b.ID)
+	gl.BindBuffer(b.target, b.id)
 }
 
 func (b *GLBuffer) Delete() {
-	gl.DeleteBuffers(1, &b.ID)
+	gl.DeleteBuffers(1, &b.id)
 }
 
 func (b *GLBuffer) Upload(data interface{}, size int) {
@@ -56,32 +58,19 @@ func (b *GLBuffer) Upload(data interface{}, size int) {
 	}
 }
 
+func (b *GLBuffer) Size() int {
+	return b.bufferBytes
+}
+
 type UniformBuffer struct {
 	*GLBuffer
-	programID uint32
-	binding   uint32
 }
 
-func NewUniformBuffer(programID uint32) (b *UniformBuffer) {
+func NewUniformBuffer() (b *UniformBuffer) {
 	b = &UniformBuffer{
-		programID: programID,
-		GLBuffer:  NewGLBuffer(gl.UNIFORM_BUFFER),
+		GLBuffer: NewGLBuffer(gl.UNIFORM_BUFFER),
 	}
 	return
-}
-
-func (b *UniformBuffer) BlockBinding(name string, binding uint32) {
-	b.binding = binding
-	var (
-		nameStr = gl.Str(fmt.Sprintf("%v\x00", name))
-		index   = uint32(gl.GetUniformBlockIndex(b.programID, nameStr))
-	)
-	gl.UniformBlockBinding(b.programID, index, b.binding)
-}
-
-func (b *UniformBuffer) Upload(data interface{}, size int) {
-	b.GLBuffer.Upload(data, size)
-	gl.BindBufferRange(gl.UNIFORM_BUFFER, b.binding, b.GLBuffer.ID, 0, size)
 }
 
 type ArrayBuffer struct {

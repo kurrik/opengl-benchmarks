@@ -14,12 +14,11 @@
 
 package render
 
-import (
-	"github.com/kurrik/opengl-benchmarks/common"
-)
+import ()
 
 type UniformBufferSheet interface {
-	Upload(ubo *common.UniformBuffer) (err error)
+	Size() int
+	BufferID() uint32
 }
 
 type UniformSprite [4]float32

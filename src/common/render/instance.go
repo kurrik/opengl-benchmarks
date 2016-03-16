@@ -31,7 +31,7 @@ type Instance struct {
 	prev     *Instance
 }
 
-func NewInstance() *Instance {
+func newInstance() *Instance {
 	return &Instance{
 		scale:    mgl32.Vec3{1.0, 1.0, 1.0},
 		position: mgl32.Vec3{0.0, 0.0, 0.0},
@@ -122,7 +122,8 @@ func (i *Instance) MarkChanged() {
 }
 
 type InstanceList struct {
-	root Instance
+	count int
+	root  Instance
 }
 
 func NewInstanceList() *InstanceList {
@@ -135,4 +136,15 @@ func (l *InstanceList) Head() *Instance {
 
 func (l *InstanceList) Prepend(inst *Instance) {
 	l.root.InsertAfter(inst)
+	l.count++
+}
+
+func (l *InstanceList) NewInstance() (inst *Instance) {
+	inst = newInstance()
+	inst.SetPosition(mgl32.Vec3{0, 0, 0})
+	inst.SetScale(mgl32.Vec3{1.0, 1.0, 1.0})
+	inst.SetRotation(0)
+	inst.Frame = 0
+	l.Prepend(inst)
+	return
 }
