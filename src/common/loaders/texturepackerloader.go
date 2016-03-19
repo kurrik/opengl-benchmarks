@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package loaders
 
 import (
 	"encoding/json"
@@ -58,30 +58,22 @@ type texturePackerJSONArray struct {
 }
 
 type TexturePackerLoader struct {
-	key       string
-	path      string
-	smoothing common.TextureSmoothing
 }
 
-func NewTexturePackerLoader(key, path string, smoothing common.TextureSmoothing) *TexturePackerLoader {
-	return &TexturePackerLoader{
-		key:       key,
-		path:      path,
-		smoothing: smoothing,
-	}
+func NewTexturePackerLoader() *TexturePackerLoader {
+	return &TexturePackerLoader{}
 }
 
-func (l *TexturePackerLoader) Load(m *Manager) (err error) {
+func (l *TexturePackerLoader) Load(jsonPath string, smoothing common.TextureSmoothing) (sheet *sprites.Sheet, err error) {
 	var (
 		dir         string
 		data        []byte
-		texture     *common.Texture
 		texturePath string
-		sheet       *sprites.Sheet
 		parsed      texturePackerJSONArray
+		texture     *common.Texture
 	)
-	dir = path.Dir(l.path)
-	if data, err = ioutil.ReadFile(l.path); err != nil {
+	dir = path.Dir(jsonPath)
+	if data, err = ioutil.ReadFile(jsonPath); err != nil {
 		return
 	}
 	if err = json.Unmarshal([]byte(data), &parsed); err != nil {
@@ -102,11 +94,9 @@ func (l *TexturePackerLoader) Load(m *Manager) (err error) {
 		)
 	}
 	texturePath = path.Join(dir, parsed.Meta.Image)
-	if texture, err = common.LoadTexture(texturePath, l.smoothing); err != nil {
+	if texture, err = common.LoadTexture(texturePath, smoothing); err != nil {
 		return
 	}
 	sheet.SetTexture(texture)
-	m.SetTexture(texturePath, texture)
-	m.SetSheet(l.key, sheet)
 	return
 }

@@ -20,8 +20,8 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang/glog"
 	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/loaders"
 	"github.com/kurrik/opengl-benchmarks/common/render"
-	"github.com/kurrik/opengl-benchmarks/common/resources"
 	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"github.com/kurrik/opengl-benchmarks/common/text"
 	"github.com/kurrik/opengl-benchmarks/common/util"
@@ -67,16 +67,14 @@ func main() {
 		err             error
 		inst            *render.Instance
 		rot             int = 0
-		textMapping     *resources.TextMapping
+		textMapping     *loaders.TextMapping
 		batchData       *render.Geometry
 		renderer        *render.Renderer
-		resourceMgr     *resources.Manager
 		spriteInstances *sprites.SpriteInstanceList
 		textInstances   *text.TextInstanceList
 		batchInstances  *render.InstanceList
 		square          *render.Geometry
 	)
-	resourceMgr = resources.NewManager()
 	if context, err = common.NewContext(); err != nil {
 		panic(err)
 	}
@@ -87,24 +85,27 @@ func main() {
 		panic(err)
 	}
 
-	if err = resourceMgr.Load(
-		resources.NewTexturePackerLoader("sheet", "src/resources/spritesheet.json", common.SmoothingNearest),
+	if sheet, err = loaders.NewTexturePackerLoader().Load(
+		"src/resources/spritesheet.json",
+		common.SmoothingNearest,
 	); err != nil {
 		panic(err)
 	}
-	sheet = resourceMgr.GetSheet("sheet")
-
-	if textMapping, err = resources.NewTextMapping(sheet, "numbered_squares_03"); err != nil {
+	if textMapping, err = loaders.NewTextMapping(
+		sheet,
+		"numbered_squares_03",
+	); err != nil {
 		panic(err)
 	}
 	textMapping.Set('A', "numbered_squares_01")
 	textMapping.Set('B', "numbered_squares_tall_16")
-	if err = resourceMgr.Load(
-		resources.NewTextLoader("batch", textMapping, 1, BATCH),
+	if batchData, err = loaders.NewTextLoader().Load(
+		textMapping,
+		1,
+		BATCH,
 	); err != nil {
 		panic(err)
 	}
-	batchData = resourceMgr.GetGeometry("batch")
 
 	spriteInstances = sprites.NewSpriteInstanceList(sheet, PixelsPerUnit)
 	batchInstances = render.NewInstanceList()
@@ -165,7 +166,6 @@ func main() {
 		sheet.Bind()
 
 		renderer.Render(camera, sheet, batchData, batchInstances)
-
 		renderer.Render(camera, sheet, square, spriteInstances)
 
 		textInstances.Bind()

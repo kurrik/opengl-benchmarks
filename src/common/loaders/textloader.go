@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package loaders
 
 import (
 	"fmt"
@@ -64,19 +64,10 @@ func (m *TextMapping) Get(r rune) (index int) {
 }
 
 type TextLoader struct {
-	mapping *TextMapping
-	scale   float32
-	grid    string
-	key     string
 }
 
-func NewTextLoader(key string, mapping *TextMapping, scale float32, grid string) *TextLoader {
-	return &TextLoader{
-		key:     key,
-		mapping: mapping,
-		scale:   scale,
-		grid:    grid,
-	}
+func NewTextLoader() *TextLoader {
+	return &TextLoader{}
 }
 
 func (l *TextLoader) add(x, y float32, index int, scale float32, geo *render.Geometry) {
@@ -120,16 +111,15 @@ func (l *TextLoader) add(x, y float32, index int, scale float32, geo *render.Geo
 	}...)
 }
 
-func (l *TextLoader) Load(m *Manager) (err error) {
+func (l *TextLoader) Load(mapping *TextMapping, scale float32, grid string) (geometry *render.Geometry, err error) {
 	var (
-		lines    []string
-		line     string
-		char     rune
-		y        int
-		x        int
-		geometry *render.Geometry
+		lines []string
+		line  string
+		char  rune
+		y     int
+		x     int
 	)
-	lines = strings.Split(strings.TrimSpace(l.grid), "\n")
+	lines = strings.Split(strings.TrimSpace(grid), "\n")
 	if len(lines) == 0 {
 		err = fmt.Errorf("No lines in input data")
 		return
@@ -137,9 +127,8 @@ func (l *TextLoader) Load(m *Manager) (err error) {
 	geometry = render.NewGeometry(len(lines) * len(lines[0]) * 6)
 	for y, line = range lines {
 		for x, char = range line {
-			l.add(float32(x), float32(y), l.mapping.Get(char), l.scale, geometry)
+			l.add(float32(x), float32(y), mapping.Get(char), scale, geometry)
 		}
 	}
-	m.SetGeometry(l.key, geometry)
 	return
 }
