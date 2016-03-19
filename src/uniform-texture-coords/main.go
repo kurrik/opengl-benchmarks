@@ -64,7 +64,6 @@ func main() {
 		font            *text.FontFace
 		fg              = color.RGBA{255, 255, 255, 255}
 		bg              = color.RGBA{0, 0, 0, 255}
-		textMgr         *text.Manager
 		err             error
 		inst            *render.Instance
 		rot             int = 0
@@ -73,6 +72,7 @@ func main() {
 		renderer        *render.Renderer
 		resourceMgr     *resources.Manager
 		spriteInstances *sprites.SpriteInstanceList
+		textInstances   *text.TextInstanceList
 		batchInstances  *render.InstanceList
 		square          *render.Geometry
 	)
@@ -113,7 +113,7 @@ func main() {
 
 	square = render.NewGeometryFromPoints(render.Square)
 
-	textMgr = text.NewManager(text.Config{
+	textInstances = text.NewTextInstanceList(text.Config{
 		TextureWidth:  512,
 		TextureHeight: 512,
 		PixelsPerUnit: PixelsPerUnit,
@@ -131,8 +131,8 @@ func main() {
 		Inst{Key: "This is text!", X: 0, Y: -1.0, R: 0},
 		Inst{Key: "More text!", X: 1.0, Y: 1.0, R: 15},
 	} {
-		inst = textMgr.Instances.NewInstance()
-		if err = textMgr.SetText(inst, s.Key, font); err != nil {
+		inst = textInstances.NewInstance()
+		if err = textInstances.SetText(inst, s.Key, font); err != nil {
 			panic(err)
 		}
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})
@@ -168,9 +168,9 @@ func main() {
 
 		renderer.Render(camera, sheet, square, spriteInstances)
 
-		textMgr.Bind()
-		renderer.Render(camera, textMgr.Regions(), square, textMgr.Instances)
-		textMgr.Unbind()
+		textInstances.Bind()
+		renderer.Render(camera, textInstances.Sheet(), square, textInstances)
+		textInstances.Unbind()
 
 		renderer.Unbind()
 
@@ -180,16 +180,20 @@ func main() {
 
 		context.SwapBuffers()
 
-		if err = textMgr.SetText(textMgr.Instances.Head(), fmt.Sprintf("Rotation %v", rot%100), font); err != nil {
+		if err = textInstances.SetText(
+			textInstances.Head(),
+			fmt.Sprintf("Rotation %v", rot%100),
+			font,
+		); err != nil {
 			fmt.Printf("ERROR: %v\n", err)
 			break
 		}
 		inst.SetRotation(float32(rot))
 		rot += 1
 	}
-	if err = common.WritePNG("test-packed.png", textMgr.Regions().Image()); err != nil {
+	if err = common.WritePNG("test-packed.png", textInstances.Sheet().Image()); err != nil {
 		panic(err)
 	}
-	textMgr.Delete()
+	textInstances.Delete()
 	glog.Flush()
 }

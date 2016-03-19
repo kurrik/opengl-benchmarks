@@ -28,16 +28,16 @@ type Config struct {
 	PixelsPerUnit float32
 }
 
-type Manager struct {
-	Instances *render.InstanceList
-	cfg       Config
-	sheet     *sprites.PackedSheet
+type TextInstanceList struct {
+	*render.InstanceList
+	cfg   Config
+	sheet *sprites.PackedSheet
 }
 
-func NewManager(cfg Config) *Manager {
-	return &Manager{
-		Instances: render.NewInstanceList(),
-		cfg:       cfg,
+func NewTextInstanceList(cfg Config) *TextInstanceList {
+	return &TextInstanceList{
+		InstanceList: render.NewInstanceList(),
+		cfg:          cfg,
 		sheet: sprites.NewPackedSheet(
 			cfg.TextureWidth,
 			cfg.TextureHeight,
@@ -45,7 +45,7 @@ func NewManager(cfg Config) *Manager {
 	}
 }
 
-func (m *Manager) SetText(instance *render.Instance, text string, font *FontFace) (err error) {
+func (l *TextInstanceList) SetText(instance *render.Instance, text string, font *FontFace) (err error) {
 	var (
 		img    draw.Image
 		sprite *sprites.Sprite
@@ -56,43 +56,43 @@ func (m *Manager) SetText(instance *render.Instance, text string, font *FontFace
 	if img, err = font.GetImage(text); err != nil {
 		return
 	}
-	if err = m.sheet.Pack(text, img); err != nil {
+	if err = l.sheet.Pack(text, img); err != nil {
 		// Attempt to compact the texture.
-		if err = m.repackImage(); err != nil {
+		if err = l.repackImage(); err != nil {
 			return
 		}
-		if err = m.sheet.Pack(text, img); err != nil {
+		if err = l.sheet.Pack(text, img); err != nil {
 			return
 		}
 	}
-	if sprite, err = m.sheet.Sprite(text); err != nil {
+	if sprite, err = l.sheet.Sprite(text); err != nil {
 		return
 	}
 	instance.Frame = sprite.Index()
-	instance.SetScale(sprite.WorldDimensions(m.cfg.PixelsPerUnit).Vec3(1.0))
+	instance.SetScale(sprite.WorldDimensions(l.cfg.PixelsPerUnit).Vec3(1.0))
 	instance.MarkChanged()
 	instance.Key = text
-	if err = m.generateTexture(); err != nil {
+	if err = l.generateTexture(); err != nil {
 		return
 	}
 	return
 }
 
-func (m *Manager) generateTexture() (err error) {
+func (l *TextInstanceList) generateTexture() (err error) {
 	var (
 		texture *common.Texture
 	)
 	if texture, err = common.GetTexture(
-		m.sheet.Image(),
+		l.sheet.Image(),
 		common.SmoothingLinear,
 	); err != nil {
 		return
 	}
-	m.sheet.SetTexture(texture)
+	l.sheet.SetTexture(texture)
 	return
 }
 
-func (m *Manager) repackImage() (err error) {
+func (l *TextInstanceList) repackImage() (err error) {
 	var (
 		newImage *sprites.PackedSheet
 		instance *render.Instance
@@ -102,12 +102,12 @@ func (m *Manager) repackImage() (err error) {
 		glog.Info("Repacking image")
 	}
 	newImage = sprites.NewPackedSheet(
-		m.sheet.Width,
-		m.sheet.Height,
+		l.sheet.Width,
+		l.sheet.Height,
 	)
-	instance = m.Instances.Head()
+	instance = l.Head()
 	for instance != nil {
-		if err = newImage.Copy(instance.Key, m.sheet); err != nil {
+		if err = newImage.Copy(instance.Key, l.sheet); err != nil {
 			return
 		}
 		if sprite, err = newImage.Sheet.Sprite(instance.Key); err != nil {
@@ -117,8 +117,8 @@ func (m *Manager) repackImage() (err error) {
 		instance.MarkChanged()
 		instance = instance.Next()
 	}
-	m.sheet = newImage
-	if err = m.generateTexture(); err != nil {
+	l.sheet = newImage
+	if err = l.generateTexture(); err != nil {
 		return
 	}
 	if glog.V(1) {
@@ -127,19 +127,19 @@ func (m *Manager) repackImage() (err error) {
 	return
 }
 
-func (m *Manager) Bind() {
-	m.sheet.Bind()
+func (l *TextInstanceList) Bind() {
+	l.sheet.Bind()
 }
 
-func (m *Manager) Unbind() {
-	m.sheet.Unbind()
+func (l *TextInstanceList) Unbind() {
+	l.sheet.Unbind()
 }
 
-func (m *Manager) Delete() {
-	m.sheet.Delete()
-	m.sheet = nil
+func (l *TextInstanceList) Delete() {
+	l.sheet.Delete()
+	l.sheet = nil
 }
 
-func (m *Manager) Regions() *sprites.PackedSheet {
-	return m.sheet
+func (l *TextInstanceList) Sheet() *sprites.PackedSheet {
+	return l.sheet
 }
