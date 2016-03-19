@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package core
 
 import (
 	"github.com/go-gl/glfw/v3.1/glfw"

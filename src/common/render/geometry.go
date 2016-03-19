@@ -16,7 +16,7 @@ package render
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/core"
 	"unsafe"
 )
 
@@ -62,7 +62,7 @@ var Square = []Point{
 type Geometry struct {
 	Points []Point
 	Dirty  bool
-	vbo    *common.ArrayBuffer
+	vbo    *core.ArrayBuffer
 	stride uintptr
 }
 
@@ -75,7 +75,7 @@ func NewGeometry(capacity int) (out *Geometry) {
 		Points: make([]Point, 0, capacity),
 		Dirty:  true,
 		stride: stride,
-		vbo:    common.NewArrayBuffer(),
+		vbo:    core.NewArrayBuffer(),
 	}
 	return
 }

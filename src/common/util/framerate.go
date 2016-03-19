@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/core"
 	"time"
 	"unsafe"
 )
@@ -44,7 +44,7 @@ type framerateDataPoint struct {
 }
 
 type Framerate struct {
-	shader        *common.Program
+	shader        *core.Program
 	vbo           uint32
 	vboBytes      int
 	stride        int32
@@ -56,7 +56,7 @@ type Framerate struct {
 
 func NewFramerateRenderer() (r *Framerate, err error) {
 	r = &Framerate{
-		shader: common.NewProgram(),
+		shader: core.NewProgram(),
 		data:   newFramerateData(120),
 	}
 	if err = r.shader.Load(FRAMERATE_VERTEX, FRAMERATE_FRAGMENT); err != nil {
@@ -92,7 +92,7 @@ func (r *Framerate) Delete() {
 	r.shader.Delete()
 }
 
-func (r *Framerate) Render(camera *common.Camera) (err error) {
+func (r *Framerate) Render(camera *core.Camera) (err error) {
 	r.data.Sample()
 	var (
 		modelView     = mgl32.Ident4()

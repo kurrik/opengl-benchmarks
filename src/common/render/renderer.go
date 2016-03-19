@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/core"
 	"unsafe"
 )
 
@@ -79,11 +79,11 @@ type renderInstance struct {
 }
 
 type Renderer struct {
-	shader      *common.Program
-	vbo         *common.ArrayBuffer
-	textureData *common.UniformBlock
-	uView       *common.Uniform
-	uProj       *common.Uniform
+	shader      *core.Program
+	vbo         *core.ArrayBuffer
+	textureData *core.UniformBlock
+	uView       *core.Uniform
+	uProj       *core.Uniform
 	bufferSize  int
 	buffer      []renderInstance
 	stride      uintptr
@@ -95,7 +95,7 @@ func NewRenderer(bufferSize int) (r *Renderer, err error) {
 		instanceStride = unsafe.Sizeof(instance)
 	)
 	r = &Renderer{
-		shader:     common.NewProgram(),
+		shader:     core.NewProgram(),
 		bufferSize: bufferSize,
 		buffer:     make([]renderInstance, bufferSize),
 		stride:     instanceStride,
@@ -105,7 +105,7 @@ func NewRenderer(bufferSize int) (r *Renderer, err error) {
 	}
 	r.shader.Bind()
 
-	r.vbo = common.NewArrayBuffer()
+	r.vbo = core.NewArrayBuffer()
 
 	r.shader.Attrib("f_InstanceFrame", instanceStride).Float(unsafe.Offsetof(instance.frame), 1)
 	r.shader.Attrib("m_Model", instanceStride).Mat4(unsafe.Offsetof(instance.model), 1)
@@ -170,7 +170,7 @@ func (r *Renderer) draw(geometry *Geometry, count int) (err error) {
 }
 
 func (r *Renderer) Render(
-	camera *common.Camera,
+	camera *core.Camera,
 	sheet UniformBufferSheet,
 	geometry *Geometry,
 	instances Instances,

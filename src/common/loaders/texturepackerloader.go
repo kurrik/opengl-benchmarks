@@ -17,7 +17,7 @@ package loaders
 import (
 	"encoding/json"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/core"
 	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"io/ioutil"
 	"path"
@@ -64,13 +64,13 @@ func NewTexturePackerLoader() *TexturePackerLoader {
 	return &TexturePackerLoader{}
 }
 
-func (l *TexturePackerLoader) Load(jsonPath string, smoothing common.TextureSmoothing) (sheet *sprites.Sheet, err error) {
+func (l *TexturePackerLoader) Load(jsonPath string, smoothing core.TextureSmoothing) (sheet *sprites.Sheet, err error) {
 	var (
 		dir         string
 		data        []byte
 		texturePath string
 		parsed      texturePackerJSONArray
-		texture     *common.Texture
+		texture     *core.Texture
 	)
 	dir = path.Dir(jsonPath)
 	if data, err = ioutil.ReadFile(jsonPath); err != nil {
@@ -94,7 +94,7 @@ func (l *TexturePackerLoader) Load(jsonPath string, smoothing common.TextureSmoo
 		)
 	}
 	texturePath = path.Join(dir, parsed.Meta.Image)
-	if texture, err = common.LoadTexture(texturePath, smoothing); err != nil {
+	if texture, err = core.LoadTexture(texturePath, smoothing); err != nil {
 		return
 	}
 	sheet.SetTexture(texture)

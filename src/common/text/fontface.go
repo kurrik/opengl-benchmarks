@@ -18,7 +18,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/core"
 	"golang.org/x/image/math/fixed"
 	"image"
 	"image/color"
@@ -96,13 +96,13 @@ func (ff *FontFace) GetImage(text string) (img draw.Image, err error) {
 	return
 }
 
-func (ff *FontFace) GetText(text string) (t *common.Texture, err error) {
+func (ff *FontFace) GetText(text string) (t *core.Texture, err error) {
 	var (
 		img image.Image
 	)
 	if img, err = ff.GetImage(text); err != nil {
 		return
 	}
-	t, err = common.GetTexture(img, gl.NEAREST)
+	t, err = core.GetTexture(img, gl.NEAREST)
 	return
 }

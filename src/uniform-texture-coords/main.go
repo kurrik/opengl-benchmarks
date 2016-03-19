@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang/glog"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/core"
 	"github.com/kurrik/opengl-benchmarks/common/loaders"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/sprites"
@@ -57,9 +57,9 @@ func main() {
 	)
 
 	var (
-		context         *common.Context
+		context         *core.Context
 		sheet           *sprites.Sheet
-		camera          *common.Camera
+		camera          *core.Camera
 		framerate       *util.Framerate
 		font            *text.FontFace
 		fg              = color.RGBA{255, 255, 255, 255}
@@ -75,7 +75,7 @@ func main() {
 		batchInstances  *render.InstanceList
 		square          *render.Geometry
 	)
-	if context, err = common.NewContext(); err != nil {
+	if context, err = core.NewContext(); err != nil {
 		panic(err)
 	}
 	if err = context.CreateWindow(WinWidth, WinHeight, WinTitle); err != nil {
@@ -87,7 +87,7 @@ func main() {
 
 	if sheet, err = loaders.NewTexturePackerLoader().Load(
 		"src/resources/spritesheet.json",
-		common.SmoothingNearest,
+		core.SmoothingNearest,
 	); err != nil {
 		panic(err)
 	}
@@ -191,7 +191,7 @@ func main() {
 		inst.SetRotation(float32(rot))
 		rot += 1
 	}
-	if err = common.WritePNG("test-packed.png", textInstances.Sheet().Image()); err != nil {
+	if err = core.WritePNG("test-packed.png", textInstances.Sheet().Image()); err != nil {
 		panic(err)
 	}
 	textInstances.Delete()

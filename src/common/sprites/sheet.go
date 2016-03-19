@@ -17,15 +17,15 @@ package sprites
 import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/core"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"unsafe"
 )
 
 type Sheet struct {
 	keys            map[string]*Sprite
-	texture         *common.Texture
-	ubo             *common.UniformBuffer
+	texture         *core.Texture
+	ubo             *core.UniformBuffer
 	Count           int
 	version         int
 	uploadedVersion int
@@ -36,11 +36,11 @@ func NewSheet() *Sheet {
 		keys:            map[string]*Sprite{},
 		version:         0,
 		uploadedVersion: -1,
-		ubo:             common.NewUniformBuffer(),
+		ubo:             core.NewUniformBuffer(),
 	}
 }
 
-func (s *Sheet) SetTexture(texture *common.Texture) {
+func (s *Sheet) SetTexture(texture *core.Texture) {
 	s.deleteTexture()
 	s.texture = texture
 }
@@ -123,7 +123,7 @@ func (s *Sheet) upload() (err error) {
 	return
 }
 
-func (s *Sheet) Texture() *common.Texture {
+func (s *Sheet) Texture() *core.Texture {
 	return s.texture
 }
 

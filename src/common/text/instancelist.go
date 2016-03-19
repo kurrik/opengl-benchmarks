@@ -16,7 +16,7 @@ package text
 
 import (
 	"github.com/golang/glog"
-	"github.com/kurrik/opengl-benchmarks/common"
+	"github.com/kurrik/opengl-benchmarks/common/core"
 	"github.com/kurrik/opengl-benchmarks/common/render"
 	"github.com/kurrik/opengl-benchmarks/common/sprites"
 	"image/draw"
@@ -80,11 +80,11 @@ func (l *TextInstanceList) SetText(instance *render.Instance, text string, font 
 
 func (l *TextInstanceList) generateTexture() (err error) {
 	var (
-		texture *common.Texture
+		texture *core.Texture
 	)
-	if texture, err = common.GetTexture(
+	if texture, err = core.GetTexture(
 		l.sheet.Image(),
-		common.SmoothingLinear,
+		core.SmoothingLinear,
 	); err != nil {
 		return
 	}
