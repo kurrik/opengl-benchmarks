@@ -173,7 +173,7 @@ func (r *Renderer) Render(
 	camera *common.Camera,
 	sheet UniformBufferSheet,
 	geometry *Geometry,
-	instances *InstanceList,
+	instances Instances,
 ) (err error) {
 	var (
 		instance *Instance

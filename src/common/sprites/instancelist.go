@@ -1,4 +1,4 @@
-// Copyright 2015 Arne Roomann-Kurrik
+// Copyright 2016 Arne Roomann-Kurrik
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,26 +18,35 @@ import (
 	"github.com/kurrik/opengl-benchmarks/common/render"
 )
 
-type Manager struct {
-	pixelsPerUnit float32
+type SpriteInstances interface {
+	render.Instances
+	SetFrame(instance *render.Instance, frame string) (err error)
 }
 
-func NewManager(pixelsPerUnit float32) *Manager {
-	return &Manager{
+type SpriteInstanceList struct {
+	*render.InstanceList
+	pixelsPerUnit float32 // TODO: Should be in sheet
+	sheet         *Sheet
+}
+
+func NewSpriteInstanceList(sheet *Sheet, pixelsPerUnit float32) *SpriteInstanceList {
+	return &SpriteInstanceList{
+		InstanceList:  render.NewInstanceList(),
 		pixelsPerUnit: pixelsPerUnit,
+		sheet:         sheet,
 	}
 }
 
-func (m *Manager) SetFrame(instance *render.Instance, sheet *Sheet, frame string) (err error) {
+func (l *SpriteInstanceList) SetFrame(instance *render.Instance, frame string) (err error) {
 	var s *Sprite
 	if instance == nil {
 		return // No error
 	}
-	if s, err = sheet.Sprite(frame); err != nil {
+	if s, err = l.sheet.Sprite(frame); err != nil {
 		return
 	}
 	instance.Frame = s.Index()
-	instance.SetScale(s.WorldDimensions(m.pixelsPerUnit).Vec3(1.0))
+	instance.SetScale(s.WorldDimensions(l.pixelsPerUnit).Vec3(1.0))
 	instance.MarkChanged()
 	instance.Key = frame
 	return

@@ -58,7 +58,6 @@ func main() {
 
 	var (
 		context         *common.Context
-		spriteMgr       *sprites.Manager
 		sheet           *sprites.Sheet
 		camera          *common.Camera
 		framerate       *util.Framerate
@@ -73,7 +72,7 @@ func main() {
 		batchData       *render.Geometry
 		renderer        *render.Renderer
 		resourceMgr     *resources.Manager
-		spriteInstances *render.InstanceList
+		spriteInstances *sprites.SpriteInstanceList
 		batchInstances  *render.InstanceList
 		square          *render.Geometry
 	)
@@ -107,14 +106,13 @@ func main() {
 	}
 	batchData = resourceMgr.GetGeometry("batch")
 
-	spriteInstances = render.NewInstanceList()
+	spriteInstances = sprites.NewSpriteInstanceList(sheet, PixelsPerUnit)
 	batchInstances = render.NewInstanceList()
 
 	batchInstances.NewInstance()
 
 	square = render.NewGeometryFromPoints(render.Square)
 
-	spriteMgr = sprites.NewManager(PixelsPerUnit)
 	textMgr = text.NewManager(text.Config{
 		TextureWidth:  512,
 		TextureHeight: 512,
@@ -146,7 +144,7 @@ func main() {
 		Inst{Key: "numbered_squares_03", X: -2.0, Y: -2.0, R: -30},
 	} {
 		inst = spriteInstances.NewInstance()
-		if err = spriteMgr.SetFrame(inst, sheet, s.Key); err != nil {
+		if err = spriteInstances.SetFrame(inst, s.Key); err != nil {
 			panic(err)
 		}
 		inst.SetPosition(mgl32.Vec3{s.X, s.Y, 0})

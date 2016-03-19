@@ -29,6 +29,7 @@ type Instance struct {
 	dirty    bool
 	next     *Instance
 	prev     *Instance
+	list     Instances
 }
 
 func newInstance() *Instance {
@@ -103,6 +104,7 @@ func (i *Instance) Remove() {
 	}
 	i.next = nil
 	i.prev = nil
+	i.list = nil
 }
 
 func (i *Instance) InsertAfter(inst *Instance) {
@@ -114,37 +116,10 @@ func (i *Instance) InsertAfter(inst *Instance) {
 	}
 	inst.next = i.next
 	inst.prev = i
+	inst.list = i.list
 	i.next = inst
 }
 
 func (i *Instance) MarkChanged() {
 	i.dirty = true
-}
-
-type InstanceList struct {
-	count int
-	root  Instance
-}
-
-func NewInstanceList() *InstanceList {
-	return &InstanceList{}
-}
-
-func (l *InstanceList) Head() *Instance {
-	return l.root.next
-}
-
-func (l *InstanceList) Prepend(inst *Instance) {
-	l.root.InsertAfter(inst)
-	l.count++
-}
-
-func (l *InstanceList) NewInstance() (inst *Instance) {
-	inst = newInstance()
-	inst.SetPosition(mgl32.Vec3{0, 0, 0})
-	inst.SetScale(mgl32.Vec3{1.0, 1.0, 1.0})
-	inst.SetRotation(0)
-	inst.Frame = 0
-	l.Prepend(inst)
-	return
 }
