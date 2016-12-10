@@ -108,9 +108,10 @@ func (p *Program) createVAO() error {
 }
 
 func (p *Program) compileShader(stype uint32, source string) (shader uint32, err error) {
-	csource := gl.Str(source)
+	csources, free := gl.Strs(source)
 	shader = gl.CreateShader(stype)
-	gl.ShaderSource(shader, 1, &csource, nil)
+	gl.ShaderSource(shader, 1, csources, nil)
+	free()
 	gl.CompileShader(shader)
 	var status int32
 	if gl.GetShaderiv(shader, gl.COMPILE_STATUS, &status); status == gl.FALSE {
